@@ -1,0 +1,37 @@
+server:
+  port: ${AI_SERVER_PORT:8083}
+
+spring:
+  application:
+    name: ai-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/Billing?connectionTimeZone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: false
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+  model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+
+metering:
+  ingestion-url: ${METERING_INGESTION_URL:http://demo:8080/metering/usage}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

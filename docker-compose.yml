@@ -1,0 +1,180 @@
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: metering-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  postgres:
+    image: postgres:16
+    container_name: metering-postgres
+    environment:
+      POSTGRES_DB: Billing
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d Billing"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  demo:
+    build: ./demo
+    container_name: metering-demo
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' 2>/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
+  project:
+    build: ./project
+    container_name: metering-project
+    ports:
+      - "8081:8081"
+    environment:
+      PROJECT_SERVER_PORT: 8081
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Billing?connectionTimeZone=UTC
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-postgres}
+      QUOTA_SERVICE_URL: http://quota:8082
+      QUOTA_INTERNAL_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me-in-production-123456}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081 && printf \"GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\":\\\"UP\\\"\" <&3'"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 60s
+
+  quota:
+    build: ./quota
+    container_name: metering-quota
+    ports:
+      - "8082:8082"
+    environment:
+      QUOTA_SERVER_PORT: 8082
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Billing
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me-in-production-123456}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      project:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8082 && printf \"GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\":\\\"UP\\\"\" <&3'"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 30s
+
+  ai-service:
+    build: ./ai-service
+    container_name: metering-ai
+    ports:
+      - "8083:8083"
+    environment:
+      AI_SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Billing?connectionTimeZone=UTC
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-postgres}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com}
+      METERING_INGESTION_URL: http://demo:8080/metering/usage
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me-in-production-123456}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      project:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8083 && printf \"GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\":\\\"UP\\\"\" <&3'"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 30s
+
+  gateway:
+    build: ./gateway
+    container_name: metering-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      INGESTION_HOST: demo
+      INGESTION_PORT: 8080
+      PROJECT_HOST: project
+      PROJECT_PORT: 8081
+      QUOTA_HOST: quota
+      QUOTA_PORT: 8082
+      AI_HOST: ai-service
+      AI_PORT: 8083
+    depends_on:
+      demo:
+        condition: service_healthy
+      project:
+        condition: service_healthy
+      quota:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8090 && printf \"GET /actuator/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\":\\\"UP\\\"\" <&3'"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
+  frontend:
+    build: ./frontend
+    container_name: metering-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+volumes:
+  redis_data:
+    name: project1_redis_data
+  postgres_data:
+    name: project1_postgres_data
