@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity
                 .badRequest()
-                .body(new ApiError(400, "Validation failed", "Request validation failed"));
+                .body(new ApiError(400, "Validation failed", "Request validation failed", fieldErrors));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

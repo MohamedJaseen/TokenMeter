@@ -4,6 +4,15 @@ import { useAuth } from "../auth/useAuth";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 
+function tenantSlug(value) {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 64);
+}
+
 export default function Register() {
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -19,6 +28,7 @@ export default function Register() {
     const [error, setError] = useState(null);
     const [creating, setCreating] = useState(false);
     const [result, setResult] = useState(null);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,28 +37,47 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
+        setFieldErrors({});
 
         if (form.password !== form.confirmPassword) {
             setError("Passwords do not match");
             return;
         }
-        if (form.tenantName.length < 2) {
+        if (form.tenantName.trim().length < 2) {
             setError("Tenant name is required");
+            return;
+        }
+        if (form.tenantName.trim().length > 255) {
+            setError("Workspace name must be 255 characters or fewer");
+            return;
+        }
+        if (form.username.trim().length < 3) {
+            setError("Username must be at least 3 characters");
+            return;
+        }
+        if (form.password.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
+        }
+        const generatedTenantId = tenantSlug(form.tenantId) || tenantSlug(form.tenantName) || "workspace";
+        if (generatedTenantId.length < 2) {
+            setError("Workspace ID must contain at least 2 letters or numbers");
             return;
         }
 
         setCreating(true);
         try {
             const data = await register({
-                tenantId: form.tenantId.trim(),
-                tenantName: form.tenantName,
-                username: form.username,
-                email: form.email,
+                tenantId: generatedTenantId,
+                tenantName: form.tenantName.trim(),
+                username: form.username.trim(),
+                email: form.email.trim() || null,
                 password: form.password,
             });
             setResult(data);
         } catch (err) {
             setError(err?.message || "Registration failed. Please try again.");
+            setFieldErrors(err?.fieldErrors || {});
         } finally {
             setCreating(false);
         }
@@ -56,20 +85,20 @@ export default function Register() {
 
     if (result) {
         return (
-            <div className="flex h-screen w-screen items-center justify-center bg-gray-100 p-4">
-                <Card className="w-full max-w-md">
+            <div className="app-canvas flex min-h-screen items-center justify-center p-4">
+                <Card className="w-full max-w-md border-[#3b4a65]">
                     <div className="mb-6 text-center">
-                        <h1 className="text-2xl font-bold text-gray-900">Tenant Created</h1>
-                        <p className="text-sm text-gray-500">
+                        <h1 className="text-2xl font-bold text-[#f8f3d8]">Workspace created</h1>
+                        <p className="text-sm text-[#a8b7cf]">
                             Your tenant <span className="font-mono font-semibold">{result.tenantId}</span> is ready.
                         </p>
                     </div>
 
-                    <div className="rounded-md bg-amber-50 p-4 border border-amber-200 text-amber-800 text-sm mb-4">
+                    <div className="mb-4 rounded-md border border-[#6d5d1e] bg-[#2b2612] p-4 text-sm text-[#f2d96b]">
                         <strong>Save this API key now!</strong> It will never be shown again. Use it as the{" "}
                         <code className="font-mono">X-API-KEY</code> header when calling the AI proxy.
                     </div>
-                    <div className="rounded bg-gray-100 p-3 font-mono text-xs text-gray-900 break-all mb-6">
+                    <div className="mb-6 break-all rounded bg-[#0b1322] p-3 font-mono text-xs text-[#edf2fa]">
                         {result.apiKey}
                     </div>
 
@@ -84,32 +113,38 @@ export default function Register() {
     }
 
     return (
-        <div className="flex h-screen w-screen items-center justify-center bg-gray-100 p-4">
-            <Card className="w-full max-w-md">
-                <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Create Tenant Account</h1>
-                    <p className="text-sm text-gray-500">Register a new tenant on the MeterFlow platform</p>
+        <div className="app-canvas flex min-h-screen items-center justify-center p-4">
+            <Card className="w-full max-w-lg border-[#3b4a65]">
+                <div className="mb-7">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d1a91c]">TokenMeter</p>
+                    <h1 className="mt-2 text-3xl font-bold text-[#f8f3d8]">Create your workspace</h1>
+                    <p className="mt-2 text-sm leading-6 text-[#a8b7cf]">Start metering AI requests, quotas, telemetry, and billing in one place.</p>
                 </div>
 
                 {error && (
-                    <div className="mb-4 rounded bg-red-50 p-3 text-sm text-red-700">{error}</div>
+                    <div className="mb-4 rounded-md border border-[#7f3440] bg-[#2a1720] p-3 text-sm text-[#ffb5bd]">
+                        <p className="font-semibold">{error}</p>
+                        {Object.entries(fieldErrors).map(([field, message]) => (
+                            <p key={field} className="mt-1">{field}: {message}</p>
+                        ))}
+                    </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Company / Tenant Name *</label>
+                        <label className="block text-sm font-medium text-[#c7d1e0]">Company / Workspace name *</label>
                         <input
                             type="text"
                             name="tenantName"
                             value={form.tenantName}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                             required
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">
-                            Tenant ID <span className="text-gray-400">(optional, lower-case)</span>
+                            Workspace ID <span className="text-[#71809a]">(optional; generated from name)</span>
                         </label>
                         <input
                             type="text"
@@ -117,49 +152,49 @@ export default function Register() {
                             value={form.tenantId}
                             onChange={handleChange}
                             placeholder="auto-generated from name"
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Admin Username *</label>
+                        <label className="block text-sm font-medium text-[#c7d1e0]">Admin username *</label>
                         <input
                             type="text"
                             name="username"
                             value={form.username}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                        <label className="block text-sm font-medium text-[#c7d1e0]">Contact email <span className="text-[#71809a]">(optional)</span></label>
                         <input
                             type="email"
                             name="email"
                             value={form.email}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Password *</label>
+                        <label className="block text-sm font-medium text-[#c7d1e0]">Password *</label>
                         <input
                             type="password"
                             name="password"
                             value={form.password}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Confirm Password *</label>
+                        <label className="block text-sm font-medium text-[#c7d1e0]">Confirm password *</label>
                         <input
                             type="password"
                             name="confirmPassword"
                             value={form.confirmPassword}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                             required
                         />
                     </div>
