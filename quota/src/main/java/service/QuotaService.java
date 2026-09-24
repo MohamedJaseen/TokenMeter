@@ -231,8 +231,8 @@ public class QuotaService {
     private TenantQuotaConfig loadConfig(String tenantId) {
 
         return configRepository.findById(tenantId)
-                .orElseGet(() ->
-                        provisionDefaultConfig(tenantId));
+                .orElseThrow(() ->
+                        new QuotaConfigNotFoundException(tenantId));
     }
 
     private TenantQuotaConfig provisionDefaultConfig(String tenantId) {

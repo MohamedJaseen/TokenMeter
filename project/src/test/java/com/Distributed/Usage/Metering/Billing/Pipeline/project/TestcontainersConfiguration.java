@@ -10,6 +10,10 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 class TestcontainersConfiguration {
 
+	static {
+		System.setProperty("user.timezone", "UTC");
+	}
+
 	@Bean
 	@ServiceConnection
 	PostgreSQLContainer postgresContainer() {

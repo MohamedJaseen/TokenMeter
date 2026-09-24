@@ -21,6 +21,8 @@ class MeteringClient:
     ) -> None:
         if not api_key or not api_key.strip():
             raise ValueError("api_key must be a non-empty string")
+        if api_key.strip().startswith("pk_"):
+            raise ValueError("public API keys are not valid for server-side metering")
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout

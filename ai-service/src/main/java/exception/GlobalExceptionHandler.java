@@ -26,6 +26,14 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(401, e.getMessage()));
     }
 
+    @ExceptionHandler(ProviderNotConfiguredException.class)
+    public ResponseEntity<ApiError> handleProviderNotConfigured(
+            ProviderNotConfiguredException e) {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiError(503, e.getMessage() + " (NOT CONFIGURED)"));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException e) {

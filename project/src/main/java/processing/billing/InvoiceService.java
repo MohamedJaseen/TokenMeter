@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class InvoiceService {
@@ -97,7 +96,6 @@ public class InvoiceService {
 
         TenantInvoice invoice = new TenantInvoice();
 
-        invoice.setInvoiceId(UUID.randomUUID());
         invoice.setTenantId(tenantId);
         invoice.setBillingPeriodStart(periodStart);
         invoice.setBillingPeriodEnd(periodEnd);
