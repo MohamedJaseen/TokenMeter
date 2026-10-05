@@ -54,6 +54,9 @@ export function AuthProvider({ children }) {
                     if (res.data?.accessToken) {
                         handleToken(res.data.accessToken);
                     }
+                    if (res.data?.refreshToken) {
+                        tokenStorage.setRefreshToken(res.data.refreshToken);
+                    }
                 } catch (err) {
                     tokenStorage.clearRefreshToken();
                 }

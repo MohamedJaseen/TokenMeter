@@ -14,10 +14,10 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 export default function Dashboard() {
     const { user } = useAuth(); const tenantId = user?.tenantId || "tenantA"; const [range, setRange] = useState("24h");
     const { data: usage, isLoading: usageLoading, error: usageError, refetch: refetchUsage } = useQuery({ queryKey: ["usage", tenantId, range], queryFn: () => fetchUsage(tenantId, range) });
-    const { data: quota, isLoading: quotaLoading, error: quotaError } = useQuery({ queryKey: ["quota", tenantId], queryFn: () => fetchQuota(tenantId) });
+    const { data: quota, isLoading: quotaLoading, error: quotaError, refetch: refetchQuota } = useQuery({ queryKey: ["quota", tenantId], queryFn: () => fetchQuota(tenantId) });
     const { data: invoices } = useQuery({ queryKey: ["invoices", tenantId], queryFn: () => fetchInvoices(tenantId) });
     if (usageLoading || quotaLoading) return <div className="space-y-4"><Skeleton className="h-28" /><div className="grid gap-3 md:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div><Skeleton className="h-72" /></div>;
-    if (usageError || quotaError) return <ErrorState message="Failed to load dashboard data." onRetry={refetchUsage} />;
+    if (usageError || quotaError) return <ErrorState message={quotaError?.message || usageError?.message || "Failed to load dashboard data."} onRetry={() => { void refetchUsage(); void refetchQuota(); }} />;
     const latestInvoice = invoices?.[0]; const quotaStatus = quota?.status === "NORMAL" ? "success" : quota?.status === "WARNING" ? "warning" : "danger";
     return <div className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="font-serif text-xl font-bold text-[#f1d766]">Dashboard</h1><p className="mt-1 text-[11px] text-[#8290a8]">How much you’re consuming right now, across every metered integration.</p></div><div className="flex rounded border border-[#2b3a53] bg-[#101827] p-0.5">{["24h","7d","30d"].map(r=><button key={r} onClick={()=>setRange(r)} className={`rounded px-2.5 py-1 text-[10px] font-medium ${range===r ? "bg-[#d1a91c] text-[#101522]" : "text-[#8997ad] hover:text-white"}`}>{r.toUpperCase()}</button>)}</div></div>

@@ -78,13 +78,16 @@ apiClient.interceptors.response.use(
 
             try {
                 const response = await apiClient.post("/auth/refresh", { refreshToken });
-                const { accessToken } = response.data ?? {};
+                const { accessToken, refreshToken: rotatedRefreshToken } = response.data ?? {};
 
                 if (!accessToken) {
                     throw new Error("Refresh response did not include an access token.");
                 }
 
                 setClientToken(accessToken);
+                if (rotatedRefreshToken) {
+                    tokenStorage.setRefreshToken(rotatedRefreshToken);
+                }
                 isRefreshing = false;
                 processQueue(null, accessToken);
                 originalRequest.headers["Authorization"] = "Bearer " + accessToken;
