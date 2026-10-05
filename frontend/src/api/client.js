@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { API_BASE } from "../lib/constants";
 import { tokenStorage } from "../auth/tokenStorage";
 
@@ -31,7 +31,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
     (config) => {
         if (currentAccessToken) {
-            config.headers["Authorization"] = `Bearer ${currentAccessToken}`;
+            config.headers["Authorization"] = "Bearer " + currentAccessToken;
         }
         return config;
     },
@@ -49,7 +49,8 @@ apiClient.interceptors.response.use(
         }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-            if (originalRequest.url.includes("/auth/login") || originalRequest.url.includes("/auth/refresh")) {
+            const requestUrl = originalRequest?.url || "";
+            if (requestUrl.includes("/auth/login") || requestUrl.includes("/auth/refresh")) {
                 return Promise.reject(normalizeError(error));
             }
 
@@ -58,7 +59,7 @@ apiClient.interceptors.response.use(
                     failedQueue.push({ resolve, reject });
                 })
                     .then((token) => {
-                        originalRequest.headers["Authorization"] = `Bearer ${token}`;
+                        originalRequest.headers["Authorization"] = "Bearer " + token;
                         return apiClient(originalRequest);
                     })
                     .catch((err) => Promise.reject(err));
@@ -76,12 +77,17 @@ apiClient.interceptors.response.use(
             }
 
             try {
-                const response = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
-                const { accessToken } = response.data;
+                const response = await apiClient.post("/auth/refresh", { refreshToken });
+                const { accessToken } = response.data ?? {};
+
+                if (!accessToken) {
+                    throw new Error("Refresh response did not include an access token.");
+                }
+
                 setClientToken(accessToken);
                 isRefreshing = false;
                 processQueue(null, accessToken);
-                originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+                originalRequest.headers["Authorization"] = "Bearer " + accessToken;
                 return apiClient(originalRequest);
             } catch (refreshError) {
                 isRefreshing = false;

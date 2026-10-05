@@ -65,12 +65,20 @@ export function AuthProvider({ children }) {
 
     const login = async (username, password) => {
         const res = await apiClient.post("/auth/login", { username, password });
-        const { accessToken, refreshToken } = res.data;
+        const { accessToken, refreshToken } = res.data ?? {};
+
+        if (!accessToken) {
+            throw new Error("Login response did not include an access token.");
+        }
+
         handleToken(accessToken);
         if (refreshToken) {
             tokenStorage.setRefreshToken(refreshToken);
+        } else {
+            tokenStorage.clearRefreshToken();
         }
-        return user;
+
+        return { accessToken, refreshToken };
     };
 
     const register = async (payload) => {
