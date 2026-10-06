@@ -96,12 +96,6 @@ export function AuthProvider({ children }) {
         tokenStorage.clearRefreshToken();
     };
 
-    const impersonateTenant = (tenantId) => {
-        if (user && user.roles.includes("SUPER_ADMIN")) {
-            setUser((prev) => ({ ...prev, tenantId }));
-        }
-    };
-
     return (
         <AuthContext.Provider
             value={{
@@ -111,7 +105,6 @@ export function AuthProvider({ children }) {
                 login,
                 register,
                 logout,
-                impersonateTenant,
                 setAccessToken: handleToken,
             }}
         >

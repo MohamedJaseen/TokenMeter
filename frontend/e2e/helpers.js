@@ -84,7 +84,10 @@ export async function mockAuthenticatedApp(page, { role = "TENANT_USER" } = {}) 
             state.pricing = JSON.parse(request.postData() || "{}");
             await route.fulfill({ json: state.pricing });
         } else if (path === "/api/v1/admin/tenants") {
-            await route.fulfill({ json: [{ tenantId, tenantName: "Example Workspace", status: "ACTIVE" }] });
+            await route.fulfill({ json: [
+                { tenantId, tierName: "Growth", monthlyLimit: 10000, currentUsage: 420, usagePercentage: 4.2, alertThresholdPercent: 80, hardCapEnabled: false, status: "NORMAL" },
+                { tenantId: "tenantB", tierName: "Pro", monthlyLimit: 5000, currentUsage: 4600, usagePercentage: 92, alertThresholdPercent: 80, hardCapEnabled: true, status: "WARNING" },
+            ] });
         } else if (path === "/api/v1/ai/generate" && method === "POST") {
             await route.fulfill({ json: { text: "Metered answer", model: "test-model", inputTokens: 8, outputTokens: 13, totalTokens: 21 } });
         } else {

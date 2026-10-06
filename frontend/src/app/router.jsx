@@ -2,6 +2,7 @@ import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { RoleRoute } from "../auth/RoleRoute";
+import { useAuth } from "../auth/useAuth";
 import { AppShell } from "../components/layout/AppShell";
 
 import Login from "../pages/Login";
@@ -16,8 +17,20 @@ import LandingPage from "../pages/LandingPage";
 import DeveloperSdkPage from "../pages/DeveloperSdkPage";
 import Pricing from "../pages/admin/Pricing";
 import Tenants from "../pages/admin/Tenants";
+import AdminOverview from "../pages/admin/Overview";
 import Forbidden from "../pages/Forbidden";
 import NotFound from "../pages/NotFound";
+
+function DashboardHome() {
+    const { user } = useAuth();
+    return user?.roles?.includes("SUPER_ADMIN")
+        ? <Navigate to="/dashboard/admin" replace />
+        : <Dashboard />;
+}
+
+function TenantOnly({ children }) {
+    return <RoleRoute forbiddenRole="SUPER_ADMIN">{children}</RoleRoute>;
+}
 
 export const router = createBrowserRouter([
     {
@@ -62,23 +75,27 @@ export const router = createBrowserRouter([
             },
             {
                 path: "dashboard",
-                element: <Dashboard />,
+                element: <TenantOnly><Dashboard /></TenantOnly>,
             },
             {
                 path: "dashboard/realtime",
-                element: <Realtime />,
+                element: <TenantOnly><Realtime /></TenantOnly>,
             },
             {
                 path: "dashboard/quotas",
-                element: <Quotas />,
+                element: <TenantOnly><Quotas /></TenantOnly>,
             },
             {
                 path: "dashboard/billing",
-                element: <Billing />,
+                element: <TenantOnly><Billing /></TenantOnly>,
             },
             {
                 path: "dashboard/api-keys",
-                element: <ApiKeys />,
+                element: <TenantOnly><ApiKeys /></TenantOnly>,
+            },
+            {
+                path: "admin",
+                element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminOverview /></RoleRoute>,
             },
             {
                 path: "admin/pricing",
@@ -106,11 +123,12 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
         children: [
-            { index: true, element: <Dashboard /> },
-            { path: "realtime", element: <Realtime /> },
-            { path: "quotas", element: <Quotas /> },
-            { path: "billing", element: <Billing /> },
-            { path: "api-keys", element: <ApiKeys /> },
+            { index: true, element: <DashboardHome /> },
+            { path: "realtime", element: <TenantOnly><Realtime /></TenantOnly> },
+            { path: "quotas", element: <TenantOnly><Quotas /></TenantOnly> },
+            { path: "billing", element: <TenantOnly><Billing /></TenantOnly> },
+            { path: "api-keys", element: <TenantOnly><ApiKeys /></TenantOnly> },
+            { path: "admin", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminOverview /></RoleRoute> },
             { path: "admin/pricing", element: <RoleRoute requiredRole="SUPER_ADMIN"><Pricing /></RoleRoute> },
             { path: "admin/tenants", element: <RoleRoute requiredRole="SUPER_ADMIN"><Tenants /></RoleRoute> },
         ],
