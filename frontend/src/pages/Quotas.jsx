@@ -16,6 +16,7 @@ export default function Quotas() {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [pendingValues, setPendingValues] = useState(null);
     const [successMsg, setSuccessMsg] = useState("");
+    const [mutationError, setMutationError] = useState("");
 
     const { data: config, isLoading, error, refetch } = useQuery({
         queryKey: ["quotaConfig", tenantId],
@@ -46,11 +47,13 @@ export default function Quotas() {
     const mutation = useMutation({
         mutationFn: (newConfig) => updateQuotaConfig(tenantId, newConfig),
         onSuccess: () => {
-            queryClient.invalidateQueries(["quota", tenantId]);
-            queryClient.invalidateQueries(["quotaConfig", tenantId]);
+            queryClient.invalidateQueries({ queryKey: ["quota", tenantId] });
+            queryClient.invalidateQueries({ queryKey: ["quotaConfig", tenantId] });
             setSuccessMsg("Quota configuration updated successfully.");
+            setMutationError("");
             setTimeout(() => setSuccessMsg(""), 4000);
         },
+        onError: (error) => setMutationError(error?.response?.data?.message || error.message || "Could not update quota configuration."),
     });
 
     const handleSaveSubmit = (e) => {
@@ -75,41 +78,49 @@ export default function Quotas() {
     if (error) return <ErrorState message="Failed to load quota configuration." onRetry={refetch} />;
 
     return (
-        <div className="space-y-6 max-w-2xl">
+        <div className="max-w-3xl space-y-6 sm:space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Quotas & Limits Management</h1>
-                <p className="text-sm text-gray-500">Configure monthly consumption limits and enforcement hard caps.</p>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[.13em] text-[#9aabc0]">Workspace controls</p>
+                <h1 className="text-2xl font-semibold tracking-tight text-[#edf2f8]">Quota & limits</h1>
+                <p className="mt-2 text-sm leading-6 text-[#91a0b2]">Review your plan allowance and configure warning and hard-cap behavior.</p>
             </div>
 
-            {successMsg && <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">{successMsg}</div>}
+            {successMsg && <div role="status" className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-4 text-sm text-emerald-200">{successMsg}</div>}
+            {mutationError && <div role="alert" className="rounded-lg border border-rose-400/25 bg-rose-400/5 p-4 text-sm text-rose-200">{mutationError}</div>}
 
             <Card>
                 <form onSubmit={handleSaveSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Tier Name</label>
+                        <label htmlFor="quota-tier-name" className="block text-sm font-medium text-gray-700">Plan name</label>
                         <input
+                            id="quota-tier-name"
                             type="text"
                             value={form.tierName}
                             onChange={(e) => setForm({ ...form, tierName: e.target.value })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            className="form-input"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Monthly Unit Limit</label>
+                        <label htmlFor="quota-monthly-limit" className="block text-sm font-medium text-gray-700">Monthly unit limit</label>
                         <input
+                            id="quota-monthly-limit"
                             type="number"
+                            min="1"
                             value={form.monthlyUnitLimit}
                             onChange={(e) => setForm({ ...form, monthlyUnitLimit: Number(e.target.value) })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none tabular-nums"
+                            className="form-input tabular-nums"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Alert Threshold Percent (%)</label>
+                        <label htmlFor="quota-alert-threshold" className="block text-sm font-medium text-gray-700">Alert threshold (%)</label>
                         <input
+                            id="quota-alert-threshold"
                             type="number"
+                            min="1"
+                            max="100"
                             value={form.alertThresholdPercent}
                             onChange={(e) => setForm({ ...form, alertThresholdPercent: Number(e.target.value) })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none tabular-nums"
+                            className="form-input tabular-nums"
                         />
                     </div>
                     <div className="flex items-center gap-3 pt-2">
@@ -127,7 +138,7 @@ export default function Quotas() {
 
                     <div className="pt-4">
                         <Button type="submit" disabled={mutation.isPending}>
-                            {mutation.isPending ? "Saving..." : "Save Changes"}
+                            {mutation.isPending ? "Saving…" : "Save changes"}
                         </Button>
                     </div>
                 </form>

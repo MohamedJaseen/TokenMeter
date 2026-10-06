@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Code2, Database, FileCode2, GitBranch, Sparkles } from "lucide-react";
+import { ArrowRight, Code2, Database, FileCode2, GitBranch, Menu, Sparkles, X } from "lucide-react";
 
 export default function DeveloperSdkPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#090e18] text-[#eef3ff]">
       <header className="border-b border-[#1d2b42] bg-[#090e18]">
@@ -24,10 +25,20 @@ export default function DeveloperSdkPage() {
             <Link to="/docs" className="transition hover:text-[#f0c82d]">Docs</Link>
           </nav>
 
-          <Link to="/playground" className="inline-flex items-center gap-2 rounded-full bg-[#d1a91c] px-4 py-2 text-xs font-semibold text-[#0d1421] transition hover:bg-[#f0c82d]">
-            Open playground <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/playground" className="hidden items-center gap-2 rounded-lg bg-[#d6b65e] px-4 py-2.5 text-xs font-semibold text-[#0d1421] transition hover:bg-[#e7c86d] sm:inline-flex">
+              Open playground <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#31415d] text-[#e8eefb] md:hidden" aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+              {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
+        {menuOpen && <nav aria-label="Mobile navigation" className="grid gap-1 border-t border-[#1d2b42] px-4 py-3 md:hidden">
+          {[["Home", "/"], ["Playground", "/playground"], ["Dashboard", "/dashboard"], ["Docs", "/docs"]].map(([label, to]) => (
+            <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2.5 text-sm text-[#c8d3e6] hover:bg-[#151f2b] hover:text-white">{label}</Link>
+          ))}
+        </nav>}
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">

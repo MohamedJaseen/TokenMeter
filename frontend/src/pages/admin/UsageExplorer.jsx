@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminTenants, searchAdminUsageEvents } from "../../api/endpoints/admin";
 import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatDate, formatNumber } from "../../lib/format";
@@ -41,7 +43,7 @@ export default function AdminUsageExplorer() {
                     <label className="space-y-1 text-xs text-[#9aa8be]"><span>Max events (up to 500)</span><input className={inputClass} type="number" min="1" max="500" value={filters.limit} onChange={(e) => setFilters({ ...filters, limit: e.target.value })} /></label>
                     <label className="space-y-1 text-xs text-[#9aa8be]"><span>Event time from</span><input className={inputClass} type="datetime-local" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
                     <label className="space-y-1 text-xs text-[#9aa8be]"><span>Event time to</span><input className={inputClass} type="datetime-local" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>
-                    <div className="flex items-end"><button className="rounded-md bg-[#d1a91c] px-3 py-2 text-xs font-semibold text-[#101522]" type="submit">Search events</button></div>
+                    <div className="flex items-end"><Button type="submit">Search events</Button></div>
                 </form>
             </Card>
 
@@ -54,18 +56,18 @@ export default function AdminUsageExplorer() {
                 {eventsQuery.isLoading ? <Skeleton className="h-52" /> : eventsQuery.error ? (
                     <ErrorState message={eventsQuery.error.message || "Failed to search usage events."} onRetry={eventsQuery.refetch} />
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="mobile-table-scroll overflow-x-auto rounded-xl border border-[#29394c]">
                         <table className="w-full min-w-[1000px] text-left text-xs text-[#b8c4d6]">
-                            <thead className="border-b border-[#283750] text-[10px] uppercase text-[#70809b]"><tr>{["Event ID", "Tenant", "Metric", "Units", "Event timestamp", "Processing", "Latency", "Duplicate"].map((heading) => <th key={heading} className="px-3 py-3">{heading}</th>)}</tr></thead>
-                            <tbody className="divide-y divide-[#222e43]">{events.map((event) => <tr key={`${event.tenantId}-${event.eventId}`}>
+                            <thead className="border-b border-[#283750] bg-[#141f2c] text-[10px] uppercase text-[#8291a4]"><tr>{["Event ID", "Tenant", "Metric", "Units", "Event timestamp", "Processing", "Latency", "Duplicate"].map((heading) => <th key={heading} scope="col" className="whitespace-nowrap px-3 py-3">{heading}</th>)}</tr></thead>
+                            <tbody className="divide-y divide-[#222e43]">{events.map((event) => <tr key={`${event.tenantId}-${event.eventId}`} className="hover:bg-[#162231]">
                                 <td className="max-w-[180px] truncate px-3 py-3 font-mono">{event.eventId}</td>
                                 <td className="px-3 py-3 font-mono">{event.tenantId}</td>
-                                <td className="px-3 py-3">{event.metricName}</td>
+                                <td className="px-3 py-3"><Badge variant="info">{event.metricName}</Badge></td>
                                 <td className="px-3 py-3 tabular-nums">{formatNumber(event.units)}</td>
                                 <td className="px-3 py-3">{formatDate(event.eventTimestamp)}</td>
-                                <td className="px-3 py-3">{event.processingStatus}</td>
-                                <td className="px-3 py-3">{formatNumber(event.latencyMillis)} ms</td>
-                                <td className="px-3 py-3">{event.duplicate ? "Yes" : "No"}</td>
+                                <td className="px-3 py-3"><Badge variant={event.processingStatus === "PROCESSED" ? "success" : event.processingStatus === "FAILED" ? "danger" : "warning"}>{event.processingStatus}</Badge></td>
+                                <td className="px-3 py-3 font-mono tabular-nums">{formatNumber(event.latencyMillis)} ms</td>
+                                <td className="px-3 py-3"><Badge variant={event.duplicate ? "warning" : "info"}>{event.duplicate ? "Duplicate" : "Unique"}</Badge></td>
                             </tr>)}
                             {!events.length && <tr><td colSpan={8} className="p-8 text-center text-[#8290a8]">No processed usage events match these filters.</td></tr>}
                             </tbody>

@@ -1,5 +1,49 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
-import { CircleHelp } from "lucide-react";
-export function Topbar() { const { user, logout } = useAuth(); return <header className="flex h-14 items-center justify-between border-b border-[#263249] bg-[#0d1421] px-4 sm:px-6"><span className="rounded border border-[#33425c] bg-[#141e30] px-2 py-1 text-[10px] font-medium text-[#d7deeb]">{user?.tenantId || "Acme Corp"}</span><div className="flex items-center gap-3"><span className="hidden text-[11px] text-[#8e9bb0] sm:block">{user?.sub || "User"}</span><CircleHelp className="h-3.5 w-3.5 text-[#8e9bb0]" /><Button variant="outline" className="px-2.5 py-1 text-[10px]" onClick={logout}>Sign out</Button></div></header>; }
+import { MobileMenuButton } from "./Sidebar";
+
+const pageTitles = [
+    ["/dashboard/admin/tenants", "Tenant management"],
+    ["/dashboard/admin/invoices", "Billing & invoices"],
+    ["/dashboard/admin/pricing", "Global pricing"],
+    ["/dashboard/admin/usage", "Usage explorer"],
+    ["/dashboard/admin", "Platform overview"],
+    ["/dashboard/quotas", "Usage & quotas"],
+    ["/dashboard/realtime", "Telemetry"],
+    ["/dashboard/billing", "Invoices"],
+    ["/dashboard/api-keys", "API keys"],
+    ["/dashboard", "Overview"],
+    ["/playground", "AI Playground"],
+];
+
+export function Topbar({ onMenuClick }) {
+    const { user, logout } = useAuth();
+    const { pathname } = useLocation();
+    const title = pageTitles.find(([path]) => pathname === path)?.[1] || "TokenMeter";
+    const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN");
+
+    return (
+        <header className="sticky top-0 z-20 flex min-h-[64px] items-center justify-between border-b border-[#263445] bg-[#0d1520]/95 px-4 backdrop-blur-md sm:px-6">
+            <div className="flex min-w-0 items-center">
+                <div className="lg:hidden"><MobileMenuButton onClick={onMenuClick} /></div>
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#e7edf6]">{title}</p>
+                    <p className="mt-0.5 hidden truncate text-[10px] text-[#77869a] sm:block">
+                        {isSuperAdmin ? "Platform administration" : user?.tenantId || "Workspace"}
+                    </p>
+                </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                <span className="hidden max-w-[180px] truncate rounded-full border border-[#2b3b4e] bg-[#121d2a] px-3 py-1.5 text-[11px] text-[#aebaca] md:inline-flex" title={user?.tenantId || "Workspace"}>
+                    {isSuperAdmin ? "Super Admin" : user?.tenantId || "Workspace"}
+                </span>
+                <span className="hidden max-w-[150px] truncate text-xs text-[#8998aa] xl:block" title={user?.sub || "Signed in user"}>
+                    {user?.sub || "Signed in"}
+                </span>
+                <Button variant="outline" className="min-h-8 px-3 py-1.5 text-[11px]" onClick={logout}>Sign out</Button>
+            </div>
+        </header>
+    );
+}

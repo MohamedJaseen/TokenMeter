@@ -2,4 +2,13 @@ import React from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 export function cn(...inputs) { return twMerge(clsx(inputs)); }
-export function Button({ children, variant = "primary", className, ...props }) { const base = "inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold transition focus:outline-none disabled:pointer-events-none disabled:opacity-50"; const variants = { primary:"bg-[#d1a91c] text-[#101522] hover:bg-[#e3bd2c]", secondary:"bg-[#202c41] text-[#e5ebf5] hover:bg-[#2b3850]", danger:"bg-[#8e3333] text-white hover:bg-[#aa4141]", outline:"border border-[#35445d] bg-transparent text-[#c9d3e3] hover:bg-[#182238]" }; return <button className={cn(base, variants[variant], className)} {...props}>{children}</button>; }
+export function Button({ children, variant = "primary", className, ...props }) {
+    const base = "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e7c86d] disabled:pointer-events-none disabled:opacity-50";
+    const variants = {
+        primary: "bg-[#d6b65e] text-[#141820] hover:bg-[#e7c86d] active:bg-[#c4a54f]",
+        secondary: "border border-[#304155] bg-[#1a2736] text-[#e0e8f1] hover:border-[#465b72] hover:bg-[#202f40]",
+        danger: "border border-[#713f45] bg-[#48282d] text-[#ffd9d9] hover:bg-[#5b3036]",
+        outline: "border border-[#35465b] bg-transparent text-[#c9d3df] hover:border-[#50647b] hover:bg-[#182332]",
+    };
+    return <button className={cn(base, variants[variant], className)} {...props}>{children}</button>;
+}

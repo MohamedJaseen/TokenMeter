@@ -122,7 +122,7 @@ export default function Register() {
                 </div>
 
                 {error && (
-                    <div className="mb-4 rounded-md border border-[#7f3440] bg-[#2a1720] p-3 text-sm text-[#ffb5bd]">
+                    <div role="alert" className="mb-4 rounded-lg border border-[#7f3440] bg-[#2a1720] p-3 text-sm text-[#ffb5bd]">
                         <p className="font-semibold">{error}</p>
                         {Object.entries(fieldErrors).map(([field, message]) => (
                             <p key={field} className="mt-1">{field}: {message}</p>
@@ -132,8 +132,9 @@ export default function Register() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-[#c7d1e0]">Company / Workspace name *</label>
+                        <label htmlFor="register-tenant-name" className="block text-sm font-medium text-[#c7d1e0]">Company / Workspace name *</label>
                         <input
+                            id="register-tenant-name"
                             type="text"
                             name="tenantName"
                             value={form.tenantName}
@@ -143,10 +144,11 @@ export default function Register() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="register-tenant-id" className="block text-sm font-medium text-gray-700">
                             Workspace ID <span className="text-[#71809a]">(optional; generated from name)</span>
                         </label>
                         <input
+                            id="register-tenant-id"
                             type="text"
                             name="tenantId"
                             value={form.tenantId}
@@ -156,8 +158,9 @@ export default function Register() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[#c7d1e0]">Admin username *</label>
+                        <label htmlFor="register-username" className="block text-sm font-medium text-[#c7d1e0]">Admin username *</label>
                         <input
+                            id="register-username"
                             type="text"
                             name="username"
                             value={form.username}
@@ -167,8 +170,9 @@ export default function Register() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[#c7d1e0]">Contact email <span className="text-[#71809a]">(optional)</span></label>
+                        <label htmlFor="register-email" className="block text-sm font-medium text-[#c7d1e0]">Contact email <span className="text-[#71809a]">(optional)</span></label>
                         <input
+                            id="register-email"
                             type="email"
                             name="email"
                             value={form.email}
@@ -177,8 +181,9 @@ export default function Register() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[#c7d1e0]">Password *</label>
+                        <label htmlFor="register-password" className="block text-sm font-medium text-[#c7d1e0]">Password *</label>
                         <input
+                            id="register-password"
                             type="password"
                             name="password"
                             value={form.password}
@@ -188,8 +193,9 @@ export default function Register() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-[#c7d1e0]">Confirm password *</label>
+                        <label htmlFor="register-confirm-password" className="block text-sm font-medium text-[#c7d1e0]">Confirm password *</label>
                         <input
+                            id="register-confirm-password"
                             type="password"
                             name="confirmPassword"
                             value={form.confirmPassword}

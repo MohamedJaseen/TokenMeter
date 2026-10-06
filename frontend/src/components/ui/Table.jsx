@@ -1,3 +1,18 @@
 import React from "react";
 import { cn } from "./Button";
-export function Table({ headers, data, renderRow, className }) { return <div className={cn("overflow-x-auto rounded-md border border-[#283750] bg-[#0f1726]", className)}><table className="w-full text-left text-xs text-[#b8c4d6]"><thead className="border-b border-[#283750] bg-[#131d2e] text-[10px] uppercase tracking-wide text-[#70809b]"><tr>{headers.map((h,i)=><th key={i} className="px-4 py-2.5 font-semibold">{h}</th>)}</tr></thead><tbody className="divide-y divide-[#222e43]">{data && data.length ? data.map((item,index)=>renderRow(item,index)) : <tr><td colSpan={headers.length} className="px-4 py-8 text-center text-[#71809a]">No records found.</td></tr>}</tbody></table></div>; }
+export function Table({ headers, data, renderRow, className, label = "Data table" }) {
+    return (
+        <div className={cn("overflow-x-auto rounded-xl border border-[#29394c] bg-[#0e1722]", className)} role="region" aria-label={label} tabIndex={0}>
+            <table className="w-full min-w-[700px] text-left text-xs text-[#b8c4d6]">
+                <thead className="border-b border-[#29394c] bg-[#141f2c] text-[10px] uppercase tracking-[.08em] text-[#8796a9]">
+                    <tr>{headers.map((heading, index) => <th key={index} scope="col" className="whitespace-nowrap px-4 py-3 font-semibold">{heading}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-[#202e3e]">
+                    {data?.length ? data.map((item, index) => renderRow(item, index)) : (
+                        <tr><td colSpan={headers.length} className="px-4 py-10 text-center text-[#8291a4]">No records found.</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+}

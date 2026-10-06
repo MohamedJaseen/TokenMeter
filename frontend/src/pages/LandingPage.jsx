@@ -1,23 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart3,
   Bot,
-  CheckCircle2,
   CircleDollarSign,
-  Database,
   FileCode2,
   Gauge,
+  Menu,
   ShieldCheck,
   Sparkles,
   Zap,
+  X,
 } from "lucide-react";
 
-const metrics = [
-  { label: "Tokens metered", value: "24.6M", detail: "this month" },
-  { label: "API calls", value: "1.4M", detail: "processed" },
-  { label: "Quota in use", value: "68%", detail: "under budget" },
+const platformCapabilities = [
+  { label: "Capture", detail: "Requests and token usage" },
+  { label: "Control", detail: "Quota thresholds and limits" },
+  { label: "Understand", detail: "Usage and billing records" },
 ];
 
 const steps = [
@@ -35,10 +34,11 @@ const featureCards = [
 ];
 
 export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#090e18] text-[#eef3ff]">
       <header className="sticky top-0 z-20 border-b border-[#1d2b42] bg-[#090e18]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-[#2d2a18] p-2 text-[#f0c82d]">
               <Sparkles className="h-4 w-4" />
@@ -57,12 +57,20 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link to="/login" className="hidden rounded-full border border-[#31415d] px-3 py-2 text-xs font-medium text-[#e8eefb] transition hover:border-[#d1a91c] hover:text-[#f0c82d] sm:inline-flex">Sign in</Link>
-            <Link to="/playground" className="inline-flex items-center gap-2 rounded-full bg-[#d1a91c] px-4 py-2 text-xs font-semibold text-[#0d1421] transition hover:bg-[#f0c82d]">
-              Try AI Playground <ArrowRight className="h-3.5 w-3.5" />
+            <Link to="/login" className="hidden rounded-lg border border-[#31415d] px-3 py-2 text-xs font-medium text-[#e8eefb] transition hover:border-[#d1a91c] hover:text-[#f0c82d] sm:inline-flex">Sign in</Link>
+            <Link to="/playground" className="hidden items-center gap-2 rounded-lg bg-[#d6b65e] px-4 py-2.5 text-xs font-semibold text-[#0d1421] transition hover:bg-[#e7c86d] sm:inline-flex">
+              Try Playground <ArrowRight className="h-3.5 w-3.5" />
             </Link>
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#31415d] text-[#e8eefb] md:hidden" aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+              {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
           </div>
         </div>
+        {menuOpen && <nav aria-label="Mobile navigation" className="grid gap-1 border-t border-[#1d2b42] px-4 py-3 md:hidden">
+          {[["Playground", "/playground"], ["Dashboard", "/dashboard"], ["Python SDK", "/developer/sdk"], ["Docs", "/docs"], ["Sign in", "/login"]].map(([label, to]) => (
+            <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2.5 text-sm text-[#c8d3e6] hover:bg-[#151f2b] hover:text-white">{label}</Link>
+          ))}
+        </nav>}
       </header>
 
       <main>
@@ -92,11 +100,10 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-8 flex flex-wrap gap-4">
-                {metrics.map((stat) => (
-                  <div key={stat.label} className="min-w-[140px] rounded-2xl border border-[#253249] bg-[#101827] px-4 py-3">
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#7a8ca3]">{stat.label}</p>
-                    <p className="mt-2 font-mono text-xl font-semibold text-[#f5f7fb]">{stat.value}</p>
-                    <p className="mt-1 text-[10px] text-[#8ea0ba]">{stat.detail}</p>
+                {platformCapabilities.map((item) => (
+                  <div key={item.label} className="min-w-[145px] rounded-xl border border-[#253249] bg-[#101827] px-4 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#d9b93a]">{item.label}</p>
+                    <p className="mt-2 text-xs text-[#b4c0d0]">{item.detail}</p>
                   </div>
                 ))}
               </div>
@@ -109,7 +116,7 @@ export default function LandingPage() {
                     <Bot className="h-4 w-4 text-[#e0b91c]" />
                     AI Playground
                   </div>
-                  <span className="rounded-full border border-[#3d4b64] bg-[#151f30] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-[#9bb1d4]">Gemini</span>
+                  <span className="rounded-full border border-[#3d4b64] bg-[#151f30] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-[#9bb1d4]">Example flow</span>
                 </div>
 
                 <div className="rounded-xl border border-[#2c3d57] bg-[#111f33] p-3 text-sm text-[#e5edf9]">
@@ -124,20 +131,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl bg-[#121f33] p-2.5 text-center">
-                    <p className="text-[9px] uppercase tracking-[0.12em] text-[#7d8ea9]">Tokens</p>
-                    <p className="mt-1 font-mono text-base font-semibold text-[#efefef]">1,284</p>
-                  </div>
-                  <div className="rounded-xl bg-[#121f33] p-2.5 text-center">
-                    <p className="text-[9px] uppercase tracking-[0.12em] text-[#7d8ea9]">Cost</p>
-                    <p className="mt-1 font-mono text-base font-semibold text-[#efefef]">$0.0128</p>
-                  </div>
-                  <div className="rounded-xl bg-[#121f33] p-2.5 text-center">
-                    <p className="text-[9px] uppercase tracking-[0.12em] text-[#7d8ea9]">Latency</p>
-                    <p className="mt-1 font-mono text-base font-semibold text-[#efefef]">1.4s</p>
-                  </div>
-                </div>
+                <p className="mt-4 text-[11px] leading-5 text-[#899bb2]">A real request reports model usage to the workspace metering pipeline.</p>
               </div>
             </div>
           </div>
@@ -150,16 +144,16 @@ export default function LandingPage() {
               <h2 className="mt-3 text-3xl font-bold text-[#f2f5fb]">Prompt → response → metered usage.</h2>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
               {[
-                ["Model", "Gemini 2.0 Flash"],
-                ["Prompt length", "2,846 chars"],
-                ["Output tokens", "894"],
-                ["Estimated cost", "$0.0128"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-[#253249] bg-[#101827] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#7d8ea9]">{label}</p>
-                  <p className="mt-3 font-mono text-lg font-semibold text-[#f5f7fb]">{value}</p>
+                ["01", "Choose a model", "Select the configured provider in your AI integration."],
+                ["02", "Send a prompt", "Make a request through the playground or your application."],
+                ["03", "Inspect usage", "Review token and request totals in the workspace dashboard."],
+              ].map(([number, title, description]) => (
+                <div key={number} className="rounded-2xl border border-[#253249] bg-[#101827] p-5">
+                  <p className="font-mono text-xs text-[#d9b93a]">{number}</p>
+                  <p className="mt-3 text-sm font-semibold text-[#edf3ff]">{title}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#a8b7cf]">{description}</p>
                 </div>
               ))}
             </div>
@@ -173,29 +167,29 @@ export default function LandingPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-3xl border border-[#253249] bg-[#101827] p-6">
+            <div className="rounded-2xl border border-[#253249] bg-[#101827] p-6">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[#8fa4c5]">Token usage</p>
-                <BarChart3 className="h-4 w-4 text-[#d1a91c]" />
+                <Gauge className="h-4 w-4 text-[#d1a91c]" />
               </div>
-              <p className="mt-5 font-serif text-4xl font-bold text-[#f8f3d8]">1.2M</p>
-              <p className="mt-3 text-sm text-[#a4b4cd]">Tokens processed in the last 24 hours.</p>
+              <p className="mt-5 text-lg font-semibold text-[#f8f3d8]">Track consumption</p>
+              <p className="mt-3 text-sm leading-6 text-[#a4b4cd]">See API request and model-token totals from your actual workspace activity.</p>
             </div>
-            <div className="rounded-3xl border border-[#253249] bg-[#101827] p-6">
+            <div className="rounded-2xl border border-[#253249] bg-[#101827] p-6">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-[#8fa4c5]">Quota</p>
                 <Gauge className="h-4 w-4 text-[#52b89b]" />
               </div>
-              <p className="mt-5 font-serif text-4xl font-bold text-[#f8f3d8]">68%</p>
-              <p className="mt-3 text-sm text-[#a4b4cd]">Monthly allowance consumed across the tenant.</p>
+              <p className="mt-5 text-lg font-semibold text-[#f8f3d8]">Set clear limits</p>
+              <p className="mt-3 text-sm leading-6 text-[#a4b4cd]">Understand quota health and thresholds using your configured tenant limits.</p>
             </div>
-            <div className="rounded-3xl border border-[#253249] bg-[#101827] p-6">
+            <div className="rounded-2xl border border-[#253249] bg-[#101827] p-6">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[#8fa4c5]">Estimated spend</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[#8fa4c5]">Billing records</p>
                 <CircleDollarSign className="h-4 w-4 text-[#d8ad32]" />
               </div>
-              <p className="mt-5 font-serif text-4xl font-bold text-[#f8f3d8]">$4,220</p>
-              <p className="mt-3 text-sm text-[#a4b4cd]">Forecasted this billing cycle with current usage trend.</p>
+              <p className="mt-5 text-lg font-semibold text-[#f8f3d8]">Follow usage to invoice</p>
+              <p className="mt-3 text-sm leading-6 text-[#a4b4cd]">Review generated invoices and the usage periods they summarize.</p>
             </div>
           </div>
         </section>

@@ -34,14 +34,45 @@ test("super-admins are redirected away from tenant-scoped configuration pages", 
     await expect(page).toHaveURL(/\/dashboard\/admin$/);
 });
 
+test("mobile workspace navigation opens as a drawer and follows the selected route", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAuthenticatedApp(page);
+    await visitProtected(page, "/dashboard");
+
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const navigation = page.getByRole("navigation", { name: "Workspace" });
+    await expect(navigation).toBeVisible();
+    await navigation.getByRole("link", { name: "Usage & quotas" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/quotas$/);
+    await expect(page.getByRole("button", { name: "Open navigation menu" })).toBeVisible();
+});
+
+test("admin usage explorer fits common breakpoints without overflow or runtime errors", async ({ page }) => {
+    const runtimeErrors = [];
+    page.on("pageerror", (error) => runtimeErrors.push(error.message));
+    page.on("console", (message) => {
+        if (message.type() === "error") runtimeErrors.push(message.text());
+    });
+    await mockAuthenticatedApp(page, { role: "SUPER_ADMIN" });
+
+    for (const width of [390, 768, 1280]) {
+        await page.setViewportSize({ width, height: 900 });
+        await visitProtected(page, "/dashboard/admin/usage");
+        await expect(page.getByRole("heading", { name: "Usage / metering explorer" })).toBeVisible();
+        const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        expect(pageWidth).toBeLessThanOrEqual(width);
+    }
+    expect(runtimeErrors).toEqual([]);
+});
+
 test("super admins can update global pricing", async ({ page }) => {
     const state = await mockAuthenticatedApp(page, { role: "SUPER_ADMIN" });
     await visitProtected(page, "/app/admin/pricing");
-    await expect(page.getByRole("heading", { name: "Global Pricing Administration" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Global pricing" })).toBeVisible();
 
     await page.locator('input[type="number"]').nth(0).fill("0.0035");
     await page.locator('input[type="number"]').nth(1).fill("0.006");
-    await page.getByRole("button", { name: "Update Global Pricing" }).click();
+    await page.getByRole("button", { name: "Update global pricing" }).click();
 
     await expect(page.getByText("Global pricing updated successfully.")).toBeVisible();
     const update = state.calls.find((call) => call.path === "/api/v1/admin/pricing" && call.method === "PUT");
@@ -171,7 +202,7 @@ test("quota hard-cap activation requires confirmation before saving", async ({ p
     const state = await mockAuthenticatedApp(page);
     await visitProtected(page, "/dashboard/quotas");
     await page.getByLabel("Enable Hard Cap (Block requests when quota is exceeded)").check();
-    await page.getByRole("button", { name: "Save Changes" }).click();
+    await page.getByRole("button", { name: "Save changes" }).click();
 
     await expect(page.getByRole("heading", { name: "Confirm Hard Cap Enforcement" })).toBeVisible();
     expect(state.calls.some((call) => call.method === "PUT" && call.path.endsWith("/quota/config"))).toBe(false);
@@ -186,7 +217,7 @@ test("quota hard-cap confirmation can be cancelled without updating", async ({ p
     const state = await mockAuthenticatedApp(page);
     await visitProtected(page, "/dashboard/quotas");
     await page.getByLabel("Enable Hard Cap (Block requests when quota is exceeded)").check();
-    await page.getByRole("button", { name: "Save Changes" }).click();
+    await page.getByRole("button", { name: "Save changes" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
 
     await expect(page.getByRole("heading", { name: "Confirm Hard Cap Enforcement" })).toHaveCount(0);

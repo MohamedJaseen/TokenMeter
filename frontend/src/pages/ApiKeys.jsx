@@ -18,6 +18,8 @@ export default function ApiKeys() {
     const [label, setLabel] = useState("");
     const [newKeySecret, setNewKeySecret] = useState(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [feedback, setFeedback] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const { data: keys, isLoading, error, refetch } = useQuery({
         queryKey: ["apiKeys", tenantId],
@@ -30,14 +32,20 @@ export default function ApiKeys() {
             queryClient.invalidateQueries(["apiKeys", tenantId]);
             setNewKeySecret(data.secret || data.apiKey);
             setLabel("");
+            setFeedback("API key created. Copy the secret now; it will not be shown again.");
+            setErrorMessage("");
         },
+        onError: (error) => setErrorMessage(error?.response?.data?.message || error.message || "Could not create API key."),
     });
 
     const revokeMutation = useMutation({
         mutationFn: (keyId) => revokeApiKey(tenantId, keyId),
         onSuccess: () => {
             queryClient.invalidateQueries(["apiKeys", tenantId]);
+            setFeedback("API key revoked.");
+            setErrorMessage("");
         },
+        onError: (error) => setErrorMessage(error?.response?.data?.message || error.message || "Could not revoke API key."),
     });
 
     const handleCreate = (e) => {
@@ -50,19 +58,24 @@ export default function ApiKeys() {
     if (error) return <ErrorState message="Failed to load API keys." onRetry={refetch} />;
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 sm:space-y-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">API Keys Management</h1>
-                    <p className="text-sm text-gray-500">Manage client credentials for AI proxy authentication.</p>
-                </div>
-                <Button onClick={() => setIsCreateOpen(true)}>Create New API Key</Button>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[.13em] text-[#9aabc0]">Developer settings</p>
+                <h1 className="text-2xl font-semibold tracking-tight text-[#edf2f8]">API keys</h1>
+                <p className="mt-2 text-sm text-[#91a0b2]">Manage credentials used by your applications to call the AI proxy.</p>
             </div>
+            <Button onClick={() => { setErrorMessage(""); setIsCreateOpen(true); }}>Create API key</Button>
+        </div>
 
-            <Card>
+        {feedback && <p role="status" className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-xs text-emerald-200">{feedback}</p>}
+        {errorMessage && <p role="alert" className="rounded-lg border border-rose-400/25 bg-rose-400/5 px-4 py-3 text-xs text-rose-200">{errorMessage}</p>}
+
+        <Card>
                 <Table
                     headers={["Prefix", "Label", "Created At", "Last Used", "Actions"]}
                     data={keys}
+                label="API keys"
                     renderRow={(k) => (
                         <tr key={k.id || k.keyId} className="hover:bg-gray-50">
                             <td className="px-6 py-4 font-mono text-xs text-gray-900">{k.prefix || "sec_...xxx"}</td>
@@ -76,7 +89,7 @@ export default function ApiKeys() {
                                     onClick={() => revokeMutation.mutate(k.id || k.keyId)}
                                     disabled={revokeMutation.isPending}
                                 >
-                                    Revoke
+                                    {revokeMutation.isPending ? "Revoking…" : "Revoke"}
                                 </Button>
                             </td>
                         </tr>
@@ -84,13 +97,13 @@ export default function ApiKeys() {
                 />
             </Card>
 
-            <Modal isOpen={isCreateOpen} title="Create API Key" onClose={() => { setIsCreateOpen(false); setNewKeySecret(null); }}>
+            <Modal isOpen={isCreateOpen} title="Create API key" onClose={() => { setIsCreateOpen(false); setNewKeySecret(null); }}>
                 {newKeySecret ? (
                     <div className="space-y-4">
-                        <div className="rounded-md bg-amber-50 p-4 border border-amber-200 text-amber-800 text-sm">
+                        <div role="status" className="rounded-lg border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-100">
                             <strong>Save this secret now!</strong> It will never be shown again.
                         </div>
-                        <div className="rounded bg-gray-100 p-3 font-mono text-xs text-gray-900 break-all">
+                        <div className="rounded-lg border border-[#35465b] bg-[#0d1520] p-3 font-mono text-xs text-gray-900 break-all">
                             {newKeySecret}
                         </div>
                         <div className="flex justify-end">
@@ -100,8 +113,9 @@ export default function ApiKeys() {
                 ) : (
                     <form onSubmit={handleCreate} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Key Label</label>
+                            <label htmlFor="api-key-label" className="block text-sm font-medium text-gray-700">Key label</label>
                             <input
+                                id="api-key-label"
                                 type="text"
                                 value={label}
                                 onChange={(e) => setLabel(e.target.value)}
@@ -112,7 +126,7 @@ export default function ApiKeys() {
                         </div>
                         <div className="flex justify-end gap-3">
                             <Button variant="outline" type="button" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                            <Button type="submit" disabled={createMutation.isPending}>Generate</Button>
+                            <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Generating…" : "Generate"}</Button>
                         </div>
                     </form>
                 )}

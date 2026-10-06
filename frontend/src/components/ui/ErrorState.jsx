@@ -3,8 +3,8 @@ import { Button } from "./Button";
 
 export function ErrorState({ message = "Failed to load data", onRetry }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-12 text-center text-red-700">
-            <p className="font-medium">{message}</p>
+        <div role="alert" className="flex flex-col items-center justify-center rounded-xl border border-rose-400/25 bg-rose-400/5 p-8 text-center text-rose-100 sm:p-10">
+            <p className="max-w-xl text-sm leading-6">{message}</p>
             {onRetry && (
                 <Button variant="danger" className="mt-4" onClick={onRetry}>
                     Retry

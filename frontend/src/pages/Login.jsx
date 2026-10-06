@@ -26,31 +26,36 @@ export default function Login() {
     };
 
     return (
-        <div className="flex h-screen w-screen items-center justify-center bg-gray-100 p-4">
-            <Card className="w-full max-w-md">
+        <div className="app-canvas flex min-h-screen items-center justify-center p-4 sm:p-6">
+            <Card className="w-full max-w-md p-6 sm:p-8">
                 <div className="mb-6 text-center">
-                    <h1 className="text-2xl font-bold text-gray-900">MeterFlow Sign In</h1>
-                    <p className="text-sm text-gray-500">API Metering & Billing Platform</p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.18em] text-[#d6b65e]">TokenMeter</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">MeterFlow Sign In</h1>
+                    <p className="mt-1 text-sm text-gray-500">API metering & billing platform</p>
                 </div>
-                {error && <div className="mb-4 rounded bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+                {error && <div role="alert" className="mb-4 rounded-lg border border-rose-400/25 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Username</label>
+                        <label htmlFor="login-username" className="block text-sm font-medium text-gray-700">Username</label>
                         <input
+                            id="login-username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            autoComplete="username"
+                            className="form-input"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">Password</label>
                         <input
+                            id="login-password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none"
+                            autoComplete="current-password"
+                            className="form-input"
                             required
                         />
                     </div>

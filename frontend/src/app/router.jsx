@@ -1,68 +1,78 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { RoleRoute } from "../auth/RoleRoute";
 import { useAuth } from "../auth/useAuth";
 import { AppShell } from "../components/layout/AppShell";
+import { Skeleton } from "../components/ui/Skeleton";
 
-import Login from "../pages/Login";
-import Register from "../pages/Register";
-import Dashboard from "../pages/Dashboard";
-import Realtime from "../pages/Realtime";
-import Quotas from "../pages/Quotas";
-import Billing from "../pages/Billing";
-import ApiKeys from "../pages/ApiKeys";
-import AiPlayground from "../pages/AiPlayground";
-import LandingPage from "../pages/LandingPage";
-import DeveloperSdkPage from "../pages/DeveloperSdkPage";
-import Pricing from "../pages/admin/Pricing";
-import Tenants from "../pages/admin/Tenants";
-import AdminOverview from "../pages/admin/Overview";
-import AdminInvoices from "../pages/admin/Invoices";
-import AdminUsageExplorer from "../pages/admin/UsageExplorer";
-import Forbidden from "../pages/Forbidden";
-import NotFound from "../pages/NotFound";
+const Dashboard = lazy(() => import("../pages/Dashboard"));
+const Realtime = lazy(() => import("../pages/Realtime"));
+const Quotas = lazy(() => import("../pages/Quotas"));
+const Billing = lazy(() => import("../pages/Billing"));
+const ApiKeys = lazy(() => import("../pages/ApiKeys"));
+const AiPlayground = lazy(() => import("../pages/AiPlayground"));
+const LandingPage = lazy(() => import("../pages/LandingPage"));
+const DeveloperSdkPage = lazy(() => import("../pages/DeveloperSdkPage"));
+const Login = lazy(() => import("../pages/Login"));
+const Register = lazy(() => import("../pages/Register"));
+const Pricing = lazy(() => import("../pages/admin/Pricing"));
+const Tenants = lazy(() => import("../pages/admin/Tenants"));
+const AdminOverview = lazy(() => import("../pages/admin/Overview"));
+const AdminInvoices = lazy(() => import("../pages/admin/Invoices"));
+const AdminUsageExplorer = lazy(() => import("../pages/admin/UsageExplorer"));
+const Forbidden = lazy(() => import("../pages/Forbidden"));
+const NotFound = lazy(() => import("../pages/NotFound"));
+
+function RouteLoading() {
+    return (
+        <div className="app-canvas min-h-screen p-5 sm:p-8" role="status" aria-live="polite">
+            <span className="sr-only">Loading page</span>
+            <div className="mx-auto max-w-6xl space-y-4">
+                <Skeleton className="h-12 w-2/5" />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <Skeleton className="h-28" />
+                    <Skeleton className="h-28" />
+                    <Skeleton className="h-28" />
+                    <Skeleton className="h-28" />
+                </div>
+                <Skeleton className="h-72" />
+            </div>
+        </div>
+    );
+}
+
+function page(Component) {
+    return <Suspense fallback={<RouteLoading />}><Component /></Suspense>;
+}
 
 function DashboardHome() {
     const { user } = useAuth();
     return user?.roles?.includes("SUPER_ADMIN")
         ? <Navigate to="/dashboard/admin" replace />
-        : <Dashboard />;
+        : page(Dashboard);
 }
 
 function TenantOnly({ children }) {
     return <RoleRoute forbiddenRole="SUPER_ADMIN">{children}</RoleRoute>;
 }
 
+function TenantPage({ component: Component }) {
+    return <TenantOnly>{page(Component)}</TenantOnly>;
+}
+
+function AdminPage({ component: Component }) {
+    return <RoleRoute requiredRole="SUPER_ADMIN">{page(Component)}</RoleRoute>;
+}
+
 export const router = createBrowserRouter([
-    {
-        path: "/",
-        element: <LandingPage />,
-    },
-    {
-        path: "/playground",
-        element: <AiPlayground />,
-    },
-    {
-        path: "/developer/sdk",
-        element: <DeveloperSdkPage />,
-    },
-    {
-        path: "/docs",
-        element: <DeveloperSdkPage />,
-    },
-    {
-        path: "/login",
-        element: <Login />,
-    },
-    {
-        path: "/register",
-        element: <Register />,
-    },
-    {
-        path: "/403",
-        element: <Forbidden />,
-    },
+    { path: "/", element: page(LandingPage) },
+    { path: "/playground", element: page(AiPlayground) },
+    { path: "/developer/sdk", element: page(DeveloperSdkPage) },
+    { path: "/docs", element: page(DeveloperSdkPage) },
+    { path: "/login", element: page(Login) },
+    { path: "/register", element: page(Register) },
+    { path: "/403", element: page(Forbidden) },
     {
         path: "/app",
         element: (
@@ -71,52 +81,17 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
         children: [
-            {
-                index: true,
-                element: <Navigate to="/dashboard" replace />,
-            },
-            {
-                path: "dashboard",
-                element: <TenantOnly><Dashboard /></TenantOnly>,
-            },
-            {
-                path: "dashboard/realtime",
-                element: <TenantOnly><Realtime /></TenantOnly>,
-            },
-            {
-                path: "dashboard/quotas",
-                element: <TenantOnly><Quotas /></TenantOnly>,
-            },
-            {
-                path: "dashboard/billing",
-                element: <TenantOnly><Billing /></TenantOnly>,
-            },
-            {
-                path: "dashboard/api-keys",
-                element: <TenantOnly><ApiKeys /></TenantOnly>,
-            },
-            {
-                path: "admin",
-                element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminOverview /></RoleRoute>,
-            },
-            {
-                path: "admin/pricing",
-                element: (
-                    <RoleRoute requiredRole="SUPER_ADMIN">
-                        <Pricing />
-                    </RoleRoute>
-                ),
-            },
-            {
-                path: "admin/tenants",
-                element: (
-                    <RoleRoute requiredRole="SUPER_ADMIN">
-                        <Tenants />
-                    </RoleRoute>
-                ),
-            },
-            { path: "admin/invoices", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminInvoices /></RoleRoute> },
-            { path: "admin/usage", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminUsageExplorer /></RoleRoute> },
+            { index: true, element: <Navigate to="/dashboard" replace /> },
+            { path: "dashboard", element: <TenantPage component={Dashboard} /> },
+            { path: "dashboard/realtime", element: <TenantPage component={Realtime} /> },
+            { path: "dashboard/quotas", element: <TenantPage component={Quotas} /> },
+            { path: "dashboard/billing", element: <TenantPage component={Billing} /> },
+            { path: "dashboard/api-keys", element: <TenantPage component={ApiKeys} /> },
+            { path: "admin", element: <AdminPage component={AdminOverview} /> },
+            { path: "admin/pricing", element: <AdminPage component={Pricing} /> },
+            { path: "admin/tenants", element: <AdminPage component={Tenants} /> },
+            { path: "admin/invoices", element: <AdminPage component={AdminInvoices} /> },
+            { path: "admin/usage", element: <AdminPage component={AdminUsageExplorer} /> },
         ],
     },
     {
@@ -128,19 +103,16 @@ export const router = createBrowserRouter([
         ),
         children: [
             { index: true, element: <DashboardHome /> },
-            { path: "realtime", element: <TenantOnly><Realtime /></TenantOnly> },
-            { path: "quotas", element: <TenantOnly><Quotas /></TenantOnly> },
-            { path: "billing", element: <TenantOnly><Billing /></TenantOnly> },
-            { path: "api-keys", element: <TenantOnly><ApiKeys /></TenantOnly> },
-            { path: "admin", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminOverview /></RoleRoute> },
-            { path: "admin/pricing", element: <RoleRoute requiredRole="SUPER_ADMIN"><Pricing /></RoleRoute> },
-            { path: "admin/tenants", element: <RoleRoute requiredRole="SUPER_ADMIN"><Tenants /></RoleRoute> },
-            { path: "admin/invoices", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminInvoices /></RoleRoute> },
-            { path: "admin/usage", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminUsageExplorer /></RoleRoute> },
+            { path: "realtime", element: <TenantPage component={Realtime} /> },
+            { path: "quotas", element: <TenantPage component={Quotas} /> },
+            { path: "billing", element: <TenantPage component={Billing} /> },
+            { path: "api-keys", element: <TenantPage component={ApiKeys} /> },
+            { path: "admin", element: <AdminPage component={AdminOverview} /> },
+            { path: "admin/pricing", element: <AdminPage component={Pricing} /> },
+            { path: "admin/tenants", element: <AdminPage component={Tenants} /> },
+            { path: "admin/invoices", element: <AdminPage component={AdminInvoices} /> },
+            { path: "admin/usage", element: <AdminPage component={AdminUsageExplorer} /> },
         ],
     },
-    {
-        path: "*",
-        element: <NotFound />,
-    },
+    { path: "*", element: page(NotFound) },
 ]);

@@ -8,8 +8,8 @@ test("dashboard presents usage, token, quota and invoice metrics", async ({ page
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
     await expect(page.getByText("1,234")).toBeVisible();
     await expect(page.getByText("5,600")).toBeVisible();
-    await expect(page.getByText("42%", { exact: true })).toBeVisible();
-    await expect(page.getByText("Estimated spend this cycle")).toBeVisible();
+    await expect(page.getByText("42%", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Latest invoice")).toBeVisible();
     expect(state.calls.some((call) => call.path === "/api/v1/tenants/tenantA/usage" && call.headers.authorization?.startsWith("Bearer "))).toBe(true);
 });
 
@@ -38,7 +38,7 @@ test("billing page lists invoice totals and payment status", async ({ page }) =>
     await mockAuthenticatedApp(page);
     await visitProtected(page, "/dashboard/billing");
 
-    await expect(page.getByRole("heading", { name: "Billing & Invoice History" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Billing & invoices" })).toBeVisible();
     await expect(page.getByText("inv-2026-10")).toBeVisible();
     await expect(page.getByText("PAID")).toBeVisible();
     await expect(page.getByText("$12.50")).toBeVisible();

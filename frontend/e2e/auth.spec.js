@@ -94,7 +94,7 @@ test("registration blocks mismatched passwords before calling the API", async ({
 test("refresh-token rotation is persisted when loading an existing session", async ({ page }) => {
     const state = await mockAuthenticatedApp(page);
     await page.goto("/dashboard/api-keys");
-    await expect(page.getByRole("heading", { name: "API Keys Management" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "API keys" })).toBeVisible();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("refresh_token"))).toBe("e2e-rotated-refresh-token");
     expect(state.calls.some((call) => call.headers.authorization?.startsWith("Bearer "))).toBe(true);
 });

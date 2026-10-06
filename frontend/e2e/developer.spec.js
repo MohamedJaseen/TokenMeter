@@ -5,7 +5,7 @@ test("API key screen creates a key and reveals the secret once", async ({ page }
     const state = await mockAuthenticatedApp(page);
     await visitProtected(page, "/dashboard/api-keys");
     await expect(page.getByText("Production")).toBeVisible();
-    await page.getByRole("button", { name: "Create New API Key" }).click();
+    await page.getByRole("button", { name: "Create API key" }).click();
     await page.getByPlaceholder("e.g., Production Backend").fill("Playwright key");
     await page.getByRole("button", { name: "Generate" }).click();
 
@@ -48,6 +48,17 @@ test("playground displays invalid API key responses", async ({ page }) => {
     await page.getByRole("button", { name: "Send prompt" }).click();
 
     await expect(page.getByText("Invalid or revoked key")).toBeVisible();
+});
+
+test("public landing navigation remains available on mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const navigation = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(navigation).toBeVisible();
+    await navigation.getByRole("link", { name: "Playground" }).click();
+    await expect(page).toHaveURL(/\/playground$/);
+    await expect(page.getByRole("heading", { name: "AI Playground" })).toBeVisible();
 });
 
 test("telemetry displays accepted events from the SSE stream", async ({ page }) => {
