@@ -178,6 +178,10 @@ test("super-admin can filter invoices, update payment status, and export", async
     await page.getByLabel("Payment status").selectOption("PENDING");
     await expect.poll(() => state.calls.some((call) =>
         call.path === "/api/v1/admin/invoices" && call.method === "GET" && call.url?.includes("paymentStatus=PENDING"))).toBe(true);
+    await page.getByLabel("Payment status").selectOption("PAYMENT_SUBMITTED");
+    await expect.poll(() => state.calls.some((call) =>
+        call.path === "/api/v1/admin/invoices" && call.method === "GET" && call.url?.includes("paymentStatus=PAYMENT_SUBMITTED"))).toBe(true);
+    await page.getByLabel("Payment status").selectOption("PENDING");
     await page.getByLabel("Update status for invoice inv-b").selectOption("PAID");
     await expect.poll(() => state.calls.some((call) =>
         call.method === "PATCH" && call.path === "/api/v1/admin/invoices/inv-b/status")).toBe(true);

@@ -14,6 +14,7 @@ public record AdminInvoiceResponse(
         long totalUnitsConsumed,
         BigDecimal totalAmountBilled,
         String paymentStatus,
+        Instant paymentSubmittedAt,
         Instant createdAt
 ) {
 }

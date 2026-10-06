@@ -68,7 +68,7 @@ export default function AdminInvoices() {
         0);
 
     const downloadCsv = () => {
-        const header = ["invoice_id", "tenant_id", "tenant_name", "period_start", "period_end", "units", "amount", "payment_status", "created_at"];
+        const header = ["invoice_id", "tenant_id", "tenant_name", "period_start", "period_end", "units", "amount", "payment_status", "payment_submitted_at", "created_at"];
         const lines = [
             header,
             ...invoices.map((invoice) => [
@@ -80,6 +80,7 @@ export default function AdminInvoices() {
                 invoice.totalUnitsConsumed,
                 invoice.totalAmountBilled,
                 invoice.paymentStatus,
+                invoice.paymentSubmittedAt,
                 invoice.createdAt,
             ]),
         ].map((row) => row.map(csvCell).join(","));
@@ -96,7 +97,7 @@ export default function AdminInvoices() {
         <div className="space-y-5">
             <header>
                 <h1 className="font-serif text-xl font-bold text-[#f1d766]">Platform billing & invoices</h1>
-                <p className="mt-1 text-[11px] text-[#8290a8]">Filter the invoice ledger, generate tenant invoices, and update payment status.</p>
+                <p className="mt-1 text-[11px] text-[#8290a8]">Review user-reported transfers, verify payment externally, and then confirm the invoice status.</p>
             </header>
             {feedback && <p role="status" className="rounded-md border border-[#31564d] bg-[#132a28] px-3 py-2 text-xs text-[#7fd4b5]">{feedback}</p>}
             {errorMessage && <p role="alert" className="rounded-md border border-[#713f3a] bg-[#301f27] px-3 py-2 text-xs text-[#f0a18d]">{errorMessage}</p>}
@@ -129,7 +130,7 @@ export default function AdminInvoices() {
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                     <div className="flex flex-wrap gap-3">
                         <label className="space-y-1 text-xs text-[#9aa8be]"><span>Filter by tenant</span><select className={inputClass} value={tenantFilter} onChange={(e) => setTenantFilter(e.target.value)}><option value="">All tenants</option>{(tenantsQuery.data || []).map((tenant) => <option key={tenant.tenantId} value={tenant.tenantId}>{tenant.tenantId}</option>)}</select></label>
-                        <label className="space-y-1 text-xs text-[#9aa8be]"><span>Payment status</span><select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="PAID">Paid</option><option value="FAILED">Failed</option></select></label>
+                        <label className="space-y-1 text-xs text-[#9aa8be]"><span>Payment status</span><select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">All statuses</option><option value="PENDING">Pending</option><option value="PAYMENT_SUBMITTED">Payment submitted</option><option value="PAID">Paid</option><option value="FAILED">Failed</option></select></label>
                     </div>
                     <Button variant="outline" disabled={!invoices.length} onClick={downloadCsv}>Download CSV</Button>
                 </div>
@@ -138,24 +139,25 @@ export default function AdminInvoices() {
                     <ErrorState message={invoicesQuery.error.message || "Failed to load platform invoices."} onRetry={invoicesQuery.refetch} />
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[900px] text-left text-xs text-[#b8c4d6]">
-                            <thead className="border-b border-[#283750] text-[10px] uppercase text-[#70809b]"><tr>{["Invoice", "Tenant", "Billing period", "Units", "Amount", "Status", "Actions"].map((heading) => <th key={heading} className="px-3 py-3">{heading}</th>)}</tr></thead>
+                        <table className="w-full min-w-[1020px] text-left text-xs text-[#b8c4d6]">
+                            <thead className="border-b border-[#283750] text-[10px] uppercase text-[#70809b]"><tr>{["Invoice", "Tenant", "Billing period", "Units", "Amount", "Status", "Submitted at", "Actions"].map((heading) => <th key={heading} className="px-3 py-3">{heading}</th>)}</tr></thead>
                             <tbody className="divide-y divide-[#222e43]">{invoices.map((invoice) => <tr key={invoice.invoiceId}>
                                 <td className="px-3 py-3 font-mono">{invoice.invoiceId}</td>
                                 <td className="px-3 py-3"><span>{invoice.tenantName}</span><span className="block font-mono text-[#8290a8]">{invoice.tenantId}</span></td>
                                 <td className="px-3 py-3">{invoice.billingPeriodStart} – {invoice.billingPeriodEnd}</td>
                                 <td className="px-3 py-3">{formatNumber(invoice.totalUnitsConsumed)}</td>
                                 <td className="px-3 py-3">{formatMoney(Math.round(Number(invoice.totalAmountBilled) * 100))}</td>
-                                <td className="px-3 py-3"><Badge variant={invoice.paymentStatus === "PAID" ? "success" : invoice.paymentStatus === "PENDING" ? "warning" : "danger"}>{invoice.paymentStatus}</Badge></td>
-                                <td className="px-3 py-3"><select aria-label={`Update status for invoice ${invoice.invoiceId}`} className={inputClass} value={invoice.paymentStatus} disabled={statusMutation.isPending} onChange={(e) => statusMutation.mutate({ invoiceId: invoice.invoiceId, paymentStatus: e.target.value })}><option value="PENDING">Pending</option><option value="PAID">Paid</option><option value="FAILED">Failed</option></select></td>
+                                <td className="px-3 py-3"><Badge variant={invoice.paymentStatus === "PAID" ? "success" : invoice.paymentStatus === "FAILED" ? "danger" : "warning"}>{invoice.paymentStatus}</Badge></td>
+                                <td className="px-3 py-3">{invoice.paymentSubmittedAt ? new Date(invoice.paymentSubmittedAt).toLocaleString() : "—"}</td>
+                                <td className="px-3 py-3"><select aria-label={`Update status for invoice ${invoice.invoiceId}`} className={inputClass} value={invoice.paymentStatus} disabled={statusMutation.isPending} onChange={(e) => statusMutation.mutate({ invoiceId: invoice.invoiceId, paymentStatus: e.target.value })}><option value="PENDING">Pending</option><option value="PAYMENT_SUBMITTED">Payment submitted</option><option value="PAID">Paid — verified</option><option value="FAILED">Failed</option></select></td>
                             </tr>)}
-                            {!invoices.length && <tr><td colSpan={7} className="p-8 text-center text-[#8290a8]">No invoices match these filters.</td></tr>}
+                            {!invoices.length && <tr><td colSpan={8} className="p-8 text-center text-[#8290a8]">No invoices match these filters.</td></tr>}
                             </tbody>
                         </table>
                     </div>
                 )}
             </Card>
-            <p className="text-[10px] leading-5 text-[#8290a8]">Invoice generation uses the configured usage aggregates and tenant unit rate. Updating payment status is an administrative ledger action; connect a payment provider before treating it as proof of funds received.</p>
+            <p className="text-[10px] leading-5 text-[#8290a8]">A user's payment submission is a claim, not proof of funds. Verify the transfer with your payment account before selecting “Paid — verified”.</p>
         </div>
     );
 }

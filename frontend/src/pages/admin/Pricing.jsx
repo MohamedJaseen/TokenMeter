@@ -63,7 +63,7 @@ export default function Pricing() {
             <Card>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="price-per-1k-tokens" className="block text-sm font-medium text-gray-700">Price per 1,000 LLM tokens ($)</label>
+                        <label htmlFor="price-per-1k-tokens" className="block text-sm font-medium text-gray-700">Price per 1,000 LLM tokens (₹)</label>
                         <input
                             id="price-per-1k-tokens"
                             type="number"
@@ -76,7 +76,7 @@ export default function Pricing() {
                         />
                     </div>
                     <div>
-                        <label htmlFor="price-per-1k-api-calls" className="block text-sm font-medium text-gray-700">Price per 1,000 API calls ($)</label>
+                        <label htmlFor="price-per-1k-api-calls" className="block text-sm font-medium text-gray-700">Price per 1,000 API calls (₹)</label>
                         <input
                             id="price-per-1k-api-calls"
                             type="number"

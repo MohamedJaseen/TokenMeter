@@ -40,6 +40,49 @@ test("billing page lists invoice totals and payment status", async ({ page }) =>
 
     await expect(page.getByRole("heading", { name: "Billing & invoices" })).toBeVisible();
     await expect(page.getByText("inv-2026-10")).toBeVisible();
-    await expect(page.getByText("PAID")).toBeVisible();
-    await expect(page.getByText("$12.50")).toBeVisible();
+    await expect(page.getByText("PAID", { exact: true })).toBeVisible();
+});
+
+test("billing displays configured QR and submits payment claim for admin verification", async ({ page }) => {
+    await mockAuthenticatedApp(page);
+    const state = [];
+    let paymentStatus = "PENDING";
+    await page.route("**/api/v1/tenants/tenantA/invoice", async (route) => {
+        await route.fulfill({ json: [{
+            invoiceId: "11111111-1111-4111-8111-111111111111",
+            billingPeriodStart: "2026-10-01",
+            billingPeriodEnd: "2026-10-31",
+            totalUnitsConsumed: 420,
+            totalAmountBilled: 12.5,
+            paymentStatus,
+            createdAt: "2026-10-02T00:00:00Z",
+        }] });
+    });
+    await page.route("**/payment-details", async (route) => {
+        await route.fulfill({ json: {
+            invoiceId: "11111111-1111-4111-8111-111111111111",
+            amount: 12.5,
+            currency: "INR",
+            qrImageUrl: "https://payments.example.test/gpay-qr.png",
+            paymentStatus: "PENDING",
+        } });
+    });
+    await page.route("**/payment-submission", async (route) => {
+        state.push({ method: route.request().method(), body: route.request().postData() });
+        paymentStatus = "PAYMENT_SUBMITTED";
+        await route.fulfill({ json: {
+            invoiceId: "11111111-1111-4111-8111-111111111111",
+            paymentStatus: "PAYMENT_SUBMITTED",
+            paymentSubmittedAt: "2026-10-06T12:00:00Z",
+        } });
+    });
+    await visitProtected(page, "/dashboard/billing");
+
+    await page.getByRole("button", { name: /Pay ₹12\.50/ }).click();
+    await expect(page.getByRole("img", { name: "Configured Google Pay payment QR code" })).toHaveAttribute("src", "https://payments.example.test/gpay-qr.png");
+    await page.getByRole("button", { name: "I’ve completed payment" }).click();
+    await expect(page.getByText("AWAITING VERIFICATION", { exact: true })).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("A Super Admin must verify the transfer");
+    expect(state).toHaveLength(1);
+    expect(state[0].method).toBe("POST");
 });

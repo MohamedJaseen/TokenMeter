@@ -118,6 +118,7 @@ public class TenantReportingService {
                                 invoice.getTotalUnitsConsumed(),
                                 invoice.getTotalAmountBilled(),
                                 invoice.getPaymentStatus(),
+                                invoice.getPaymentSubmittedAt(),
                                 invoice.getCreatedAt()
                         ))
                 .toList();

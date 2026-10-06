@@ -231,7 +231,7 @@ export default function Tenants() {
                         <Field label="Plan name"><input className={inputClass} required value={createForm.planName} onChange={(e) => setCreateForm({ ...createForm, planName: e.target.value })} /></Field>
                         <Field label="Monthly unit limit"><input className={inputClass} type="number" min="1" required value={createForm.monthlyUnitLimit} onChange={(e) => setCreateForm({ ...createForm, monthlyUnitLimit: e.target.value })} /></Field>
                         <Field label="Alert threshold (%)"><input className={inputClass} type="number" min="1" max="100" required value={createForm.alertThresholdPercent} onChange={(e) => setCreateForm({ ...createForm, alertThresholdPercent: e.target.value })} /></Field>
-                        <Field label="Unit rate ($)"><input className={inputClass} type="number" min="0" step="0.000001" required value={createForm.unitRateDollars} onChange={(e) => setCreateForm({ ...createForm, unitRateDollars: e.target.value })} /></Field>
+                        <Field label="Unit rate (₹)"><input className={inputClass} type="number" min="0" step="0.000001" required value={createForm.unitRateDollars} onChange={(e) => setCreateForm({ ...createForm, unitRateDollars: e.target.value })} /></Field>
                         <label className="flex items-center gap-2 text-xs text-[#c5cfde]"><input type="checkbox" checked={createForm.hardCapEnabled} onChange={(e) => setCreateForm({ ...createForm, hardCapEnabled: e.target.checked })} />Enable hard cap</label>
                         <div className="flex justify-end md:col-span-2"><Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Creating..." : "Create tenant"}</Button></div>
                     </form>
@@ -309,7 +309,7 @@ export default function Tenants() {
                                 <Field label="Plan name"><input className={inputClass} value={quotaForm.tierName} onChange={(e) => setQuotaForm({ ...quotaForm, tierName: e.target.value })} /></Field>
                                 <Field label="Monthly unit limit"><input className={inputClass} type="number" min="1" value={quotaForm.monthlyUnitLimit} onChange={(e) => setQuotaForm({ ...quotaForm, monthlyUnitLimit: e.target.value })} /></Field>
                                 <Field label="Warning threshold (%)"><input className={inputClass} type="number" min="1" max="100" value={quotaForm.alertThresholdPercent} onChange={(e) => setQuotaForm({ ...quotaForm, alertThresholdPercent: e.target.value })} /></Field>
-                                <Field label="Unit rate ($)"><input className={inputClass} type="number" min="0" step="0.000001" value={quotaForm.unitRateDollars} onChange={(e) => setQuotaForm({ ...quotaForm, unitRateDollars: e.target.value })} /></Field>
+                                <Field label="Unit rate (₹)"><input className={inputClass} type="number" min="0" step="0.000001" value={quotaForm.unitRateDollars} onChange={(e) => setQuotaForm({ ...quotaForm, unitRateDollars: e.target.value })} /></Field>
                                 <label className="flex items-center gap-2 text-xs text-[#c5cfde]"><input type="checkbox" checked={quotaForm.hardCapEnabled} onChange={(e) => setQuotaForm({ ...quotaForm, hardCapEnabled: e.target.checked })} />Enable hard cap</label>
                                 <div className="flex justify-end sm:col-span-2"><Button disabled={quotaMutation.isPending}>{quotaMutation.isPending ? "Saving..." : "Save plan & quota"}</Button></div>
                             </form>}

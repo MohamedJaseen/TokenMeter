@@ -5,7 +5,7 @@ import { fetchAdminInvoices, fetchAdminPricing, fetchAdminTenants, searchAdminUs
 import { Card } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { formatNumber } from "../../lib/format";
+import { formatMoney, formatNumber } from "../../lib/format";
 
 function ControlLink({ to, title, description }) {
     return (
@@ -88,7 +88,7 @@ export default function AdminOverview() {
                     </Card>
                     <Card>
                         <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Paid revenue this month</p>
-                        <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{invoicesQuery.isLoading ? "…" : `$${paidRevenueThisMonth.toFixed(2)}`}</p>
+                        <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{invoicesQuery.isLoading ? "…" : formatMoney(Math.round(paidRevenueThisMonth * 100))}</p>
                     </Card>
                 </div>
             )}
@@ -109,11 +109,11 @@ export default function AdminOverview() {
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-md bg-[#101827] p-3">
                             <p className="text-[10px] text-[#8795ad]">Per 1,000 LLM tokens</p>
-                            <p className="mt-1 font-mono text-sm font-semibold text-[#f5f7fb]">${Number(pricing.pricePer1kTokens).toFixed(4)}</p>
+                            <p className="mt-1 font-mono text-sm font-semibold text-[#f5f7fb]">₹{Number(pricing.pricePer1kTokens).toFixed(4)}</p>
                         </div>
                         <div className="rounded-md bg-[#101827] p-3">
                             <p className="text-[10px] text-[#8795ad]">Per 1,000 API calls</p>
-                            <p className="mt-1 font-mono text-sm font-semibold text-[#f5f7fb]">${Number(pricing.pricePer1kApiCalls).toFixed(4)}</p>
+                            <p className="mt-1 font-mono text-sm font-semibold text-[#f5f7fb]">₹{Number(pricing.pricePer1kApiCalls).toFixed(4)}</p>
                         </div>
                     </div>
                 )}

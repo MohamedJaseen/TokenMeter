@@ -2,6 +2,7 @@ package controller;
 
 import dto.InvoiceReportResponse;
 import dto.InvoiceRequest;
+import dto.PaymentInstructions;
 import dto.RealtimeEvent;
 import dto.UsageReportResponse;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import persistence.entity.TenantInvoice;
 import persistence.repository.TenantRepository;
 import processing.billing.InvoiceService;
+import processing.billing.ManualPaymentService;
 import processing.service.RealtimeEventBus;
 import service.TenantReportingService;
 
@@ -32,17 +34,20 @@ public class TenantReportingController {
     private final RealtimeEventBus realtimeEventBus;
     private final TenantRepository tenantRepository;
     private final InvoiceService invoiceService;
+    private final ManualPaymentService manualPaymentService;
 
     public TenantReportingController(
             TenantReportingService reportingService,
             RealtimeEventBus realtimeEventBus,
             TenantRepository tenantRepository,
-            InvoiceService invoiceService) {
+            InvoiceService invoiceService,
+            ManualPaymentService manualPaymentService) {
 
         this.reportingService = reportingService;
         this.realtimeEventBus = realtimeEventBus;
         this.tenantRepository = tenantRepository;
         this.invoiceService = invoiceService;
+        this.manualPaymentService = manualPaymentService;
     }
 
     @GetMapping("/{id}/usage")
@@ -80,6 +85,22 @@ public class TenantReportingController {
         return toResponse(invoice);
     }
 
+    @GetMapping("/{id}/invoice/{invoiceId}/payment-details")
+    public PaymentInstructions getPaymentDetails(
+            @PathVariable("id") String tenantId,
+            @PathVariable java.util.UUID invoiceId) {
+
+        return manualPaymentService.getPaymentDetails(tenantId, invoiceId);
+    }
+
+    @PostMapping("/{id}/invoice/{invoiceId}/payment-submission")
+    public InvoiceReportResponse submitManualPayment(
+            @PathVariable("id") String tenantId,
+            @PathVariable java.util.UUID invoiceId) {
+
+        return toResponse(manualPaymentService.submitPayment(tenantId, invoiceId));
+    }
+
     @GetMapping(
             value = "/{id}/usage/realtime",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -109,6 +130,7 @@ public class TenantReportingController {
                 invoice.getTotalUnitsConsumed(),
                 invoice.getTotalAmountBilled(),
                 invoice.getPaymentStatus(),
+                invoice.getPaymentSubmittedAt(),
                 invoice.getCreatedAt());
     }
 }

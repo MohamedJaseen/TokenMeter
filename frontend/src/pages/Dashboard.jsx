@@ -122,7 +122,7 @@ export default function Dashboard() {
                 <MetricCard
                     icon={ReceiptText}
                     label="Latest invoice"
-                    value={invoicesQuery.isLoading ? "Loading…" : latestInvoice ? formatMoney(Math.round(Number(latestInvoice.totalAmountBilled || 0) * 100), "USD") : "—"}
+                    value={invoicesQuery.isLoading ? "Loading…" : latestInvoice ? formatMoney(Math.round(Number(latestInvoice.totalAmountBilled || 0) * 100), "INR") : "—"}
                     note={invoicesQuery.error ? "Invoice history unavailable" : latestInvoice ? `${latestInvoice.billingPeriodStart} – ${latestInvoice.billingPeriodEnd}` : "No invoice available"}
                 />
                 <MetricCard

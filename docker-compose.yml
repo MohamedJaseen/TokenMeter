@@ -64,6 +64,7 @@ services:
       QUOTA_SERVICE_URL: http://quota:8082
       QUOTA_INTERNAL_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
       JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me-in-production-123456}
+      MANUAL_PAYMENT_QR_IMAGE_URL: ${MANUAL_PAYMENT_QR_IMAGE_URL:-}
     depends_on:
       redis:
         condition: service_healthy

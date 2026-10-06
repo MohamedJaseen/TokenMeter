@@ -1,4 +1,4 @@
-export function formatMoney(amountInMinorUnits, currencyCode = "USD") {
+export function formatMoney(amountInMinorUnits, currencyCode = "INR") {
     const amount = (amountInMinorUnits || 0) / 100;
     return new Intl.NumberFormat("en-US", {
         style: "currency",

@@ -236,7 +236,7 @@ public class AdminService {
                 ? null
                 : paymentStatus.toUpperCase(Locale.ROOT);
         if (normalizedStatus != null
-                && !List.of("PENDING", "PAID", "FAILED").contains(normalizedStatus)) {
+                && !List.of("PENDING", "PAYMENT_SUBMITTED", "PAID", "FAILED").contains(normalizedStatus)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Unsupported invoice payment status");
@@ -259,6 +259,7 @@ public class AdminService {
                         invoice.getTotalUnitsConsumed(),
                         invoice.getTotalAmountBilled(),
                         invoice.getPaymentStatus(),
+                        invoice.getPaymentSubmittedAt(),
                         invoice.getCreatedAt()))
                 .toList();
     }
@@ -269,7 +270,7 @@ public class AdminService {
             String paymentStatus) {
 
         String normalizedStatus = paymentStatus.toUpperCase(Locale.ROOT);
-        if (!List.of("PENDING", "PAID", "FAILED").contains(normalizedStatus)) {
+        if (!List.of("PENDING", "PAYMENT_SUBMITTED", "PAID", "FAILED").contains(normalizedStatus)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Unsupported invoice payment status");
@@ -291,6 +292,7 @@ public class AdminService {
                 saved.getTotalUnitsConsumed(),
                 saved.getTotalAmountBilled(),
                 saved.getPaymentStatus(),
+                saved.getPaymentSubmittedAt(),
                 saved.getCreatedAt());
     }
 
@@ -313,6 +315,7 @@ public class AdminService {
                 invoice.getTotalUnitsConsumed(),
                 invoice.getTotalAmountBilled(),
                 invoice.getPaymentStatus(),
+                invoice.getPaymentSubmittedAt(),
                 invoice.getCreatedAt());
     }
 

@@ -13,6 +13,7 @@ public record InvoiceReportResponse(
         long totalUnitsConsumed,
         BigDecimal totalAmountBilled,
         String paymentStatus,
+        Instant paymentSubmittedAt,
         Instant createdAt
 ) {
 }

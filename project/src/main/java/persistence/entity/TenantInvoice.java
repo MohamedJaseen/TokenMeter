@@ -38,6 +38,9 @@ public class TenantInvoice {
     @Column(name = "payment_status", nullable = false, length = 24)
     private String paymentStatus;
 
+    @Column(name = "payment_submitted_at")
+    private Instant paymentSubmittedAt;
+
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -98,6 +101,14 @@ public class TenantInvoice {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public Instant getPaymentSubmittedAt() {
+        return paymentSubmittedAt;
+    }
+
+    public void setPaymentSubmittedAt(Instant paymentSubmittedAt) {
+        this.paymentSubmittedAt = paymentSubmittedAt;
     }
 
     public Instant getCreatedAt() {
