@@ -56,4 +56,5 @@ test("telemetry displays accepted events from the SSE stream", async ({ page }) 
     await expect(page.getByText("evt-live-1")).toBeVisible();
     await expect(page.getByText("llm_tokens")).toBeVisible();
     await expect(page.getByRole("cell", { name: "17", exact: true })).toBeVisible();
+    await expect(page.locator("tbody tr")).toHaveCount(1);
 });

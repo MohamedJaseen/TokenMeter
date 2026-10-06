@@ -55,7 +55,8 @@ export async function mockAuthenticatedApp(page, { role = "TENANT_USER" } = {}) 
             await route.fulfill({
                 status: 200,
                 contentType: "text/event-stream",
-                body: 'data: {"eventId":"evt-live-1","tenantId":"tenantA","metricName":"llm_tokens","units":17,"timestamp":"2026-10-06T10:00:00Z"}\n\n',
+                body: 'data: {"type":"connected","tenantId":"tenantA","eventId":null,"metricName":null,"units":null,"timestamp":"2026-10-06T10:00:00Z"}\n\n' +
+                    'data: {"type":"usage","eventId":"evt-live-1","tenantId":"tenantA","metricName":"llm_tokens","units":17,"timestamp":"2026-10-06T10:00:01Z"}\n\n',
             });
         } else if (path === "/api/v1/tenants/tenantA/usage") {
             await route.fulfill({ json: { tenantId: "tenantA", totalUsage: 6834, apiCallsCount: 1234, llmTokensCount: 5600, hourlyUsage: [{ bucketHour: "2026-10-06T10:00:00Z", units: 20 }] } });

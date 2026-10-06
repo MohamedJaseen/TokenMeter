@@ -1,6 +1,5 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_BASE } from "../lib/constants";
-import { tokenStorage } from "../auth/tokenStorage";
 
 export function useUsageStream(tenantId, accessToken) {
     const [events, setEvents] = useState([]);
@@ -66,6 +65,7 @@ export function useUsageStream(tenantId, accessToken) {
                             try {
                                 const jsonStr = line.replace("data:", "").trim();
                                 const parsed = JSON.parse(jsonStr);
+                                if (parsed.type !== "usage") continue;
                                 bufferRef.current.push(parsed);
                                 setLastEventAt(new Date());
                             } catch (e) {
