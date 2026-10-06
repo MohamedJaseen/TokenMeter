@@ -42,3 +42,8 @@ docker logs metering-ai
 ```
 
 Notes to self for future SDK/API work — record correct tenant→key seeding and SDK→backend contract once integration tests are run.
+
+## Render service-to-service URLs
+- AI usage reporting uses `METERING_INGESTION_URL`; its Render fallback is `https://demo1-ry95.onrender.com/metering/usage`.
+- Docker Compose overrides this with `http://demo:8080/metering/usage`.
+- If the ingestion service URL changes, update the AI service environment variable (including `/metering/usage`) and redeploy AI.

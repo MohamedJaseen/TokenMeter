@@ -23,14 +23,27 @@ public class UsageReportingService {
     }
 
     public void report(String tenantId, long totalTokens) {
+        Instant timestamp = Instant.now();
+
+        postEvent(tenantId, "api_calls", 1, timestamp);
+
+        if (totalTokens > 0) {
+            postEvent(tenantId, "llm_tokens", totalTokens, timestamp);
+        }
+    }
+
+    private void postEvent(
+            String tenantId,
+            String metricName,
+            long units,
+            Instant timestamp) {
 
         UsageEventDto event = new UsageEventDto(
                 UUID.randomUUID(),
                 tenantId,
-                "llm_tokens",
-                totalTokens,
-                Instant.now()
-        );
+                metricName,
+                units,
+                timestamp);
 
         restClient.post()
                 .uri("")

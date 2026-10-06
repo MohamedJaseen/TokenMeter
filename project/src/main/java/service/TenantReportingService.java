@@ -11,10 +11,19 @@ import persistence.repository.TenantInvoiceRepository;
 import persistence.repository.TenantRepository;
 import persistence.repository.UsageHourlyAggregateRepository;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Service
 public class TenantReportingService {
+
+    private static final Map<String, Duration> USAGE_RANGES = Map.of(
+            "24h", Duration.ofHours(24),
+            "7d", Duration.ofDays(7),
+            "30d", Duration.ofDays(30));
 
     private final UsageHourlyAggregateRepository usageRepository;
     private final TenantInvoiceRepository invoiceRepository;
@@ -30,32 +39,66 @@ public class TenantReportingService {
         this.tenantRepository = tenantRepository;
     }
 
-    public UsageReportResponse getUsage(String tenantId) {
+    public UsageReportResponse getUsage(String tenantId, String range) {
 
         requireTenant(tenantId);
 
+        Duration duration = USAGE_RANGES.get(range);
+        if (duration == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Unsupported usage range: " + range);
+        }
+
+        Instant end = Instant.now();
+        Instant start = end.minus(duration);
         List<UsageHourlyAggregate> rows =
                 usageRepository
-                        .findByTenantIdOrderByBucketHourAsc(tenantId);
+                        .findByTenantIdAndBucketHourBetween(
+                                tenantId,
+                                start,
+                                end);
 
         long totalUsage = rows.stream()
                 .mapToLong(UsageHourlyAggregate::getTotalUnits)
                 .sum();
 
+        long apiCallsCount = sumMetric(rows, "api_calls");
+        long llmTokensCount = sumMetric(rows, "llm_tokens");
+
+        Map<Instant, Long> hourlyTotals = new TreeMap<>();
+        rows.forEach(row ->
+                hourlyTotals.merge(
+                        row.getBucketHour(),
+                        row.getTotalUnits(),
+                        Long::sum));
+
         List<UsageReportResponse.HourlyUsage> hourly =
-                rows.stream()
-                        .map(row ->
+                hourlyTotals.entrySet()
+                        .stream()
+                        .map(entry ->
                                 new UsageReportResponse.HourlyUsage(
-                                        row.getBucketHour(),
-                                        row.getTotalUnits()
-                                ))
+                                        entry.getKey(),
+                                        entry.getValue()))
                         .toList();
 
         return new UsageReportResponse(
                 tenantId,
                 totalUsage,
+                apiCallsCount,
+                llmTokensCount,
                 hourly
         );
+    }
+
+    private long sumMetric(
+            List<UsageHourlyAggregate> rows,
+            String metricName) {
+
+        return rows.stream()
+                .filter(row -> metricName.equalsIgnoreCase(row.getMetricName()))
+                .mapToLong(UsageHourlyAggregate::getTotalUnits)
+                .sum();
     }
 
     public List<InvoiceReportResponse> getInvoices(

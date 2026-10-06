@@ -46,7 +46,7 @@ ai:
     model: ${MISTRAL_MODEL:mistral-small-latest}
 
 metering:
-  ingestion-url: ${METERING_INGESTION_URL:http://demo:8080/metering/usage}
+  ingestion-url: ${METERING_INGESTION_URL:https://demo1-ry95.onrender.com/metering/usage}
 
 management:
   endpoints:

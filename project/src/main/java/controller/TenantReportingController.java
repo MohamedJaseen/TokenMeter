@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -46,9 +47,10 @@ public class TenantReportingController {
 
     @GetMapping("/{id}/usage")
     public UsageReportResponse getUsage(
-            @PathVariable("id") String tenantId) {
+            @PathVariable("id") String tenantId,
+            @RequestParam(defaultValue = "24h") String range) {
 
-        return reportingService.getUsage(tenantId);
+        return reportingService.getUsage(tenantId, range);
     }
 
     @GetMapping("/{id}/invoice")
