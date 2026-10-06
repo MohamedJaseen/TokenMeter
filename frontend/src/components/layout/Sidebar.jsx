@@ -5,7 +5,7 @@ import { Activity, Cloud, Code2, Gauge, LayoutDashboard, Menu, Receipt, Search, 
 
 const tenantNavigation = [
     { label: "Overview", to: "/dashboard", icon: LayoutDashboard, end: true },
-    { label: "AI Playground", to: "/playground", icon: Sparkles },
+    { label: "AI Playground", to: "/dashboard/playground", icon: Sparkles },
     { label: "Usage & quotas", to: "/dashboard/quotas", icon: Gauge },
     { label: "Telemetry", to: "/dashboard/realtime", icon: Activity },
 ];

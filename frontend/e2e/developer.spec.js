@@ -24,7 +24,8 @@ test("API key screen revokes a key", async ({ page }) => {
 
 test("playground sends the prompt with the tenant key and renders token usage", async ({ page }) => {
     const state = await mockAuthenticatedApp(page);
-    await page.goto("/playground");
+    await visitProtected(page, "/dashboard/playground");
+    await expect(page.getByRole("navigation", { name: "Workspace" })).toBeVisible();
     await page.locator('input[type="password"]').fill("sec_test_playground");
     await page.getByPlaceholder("Message the metering assistant...").fill("Count these tokens");
     await page.getByRole("button", { name: "Send prompt" }).click();
@@ -42,12 +43,22 @@ test("playground displays invalid API key responses", async ({ page }) => {
     await page.route("**/api/v1/ai/generate", async (route) => {
         await route.fulfill({ status: 401, json: { message: "Invalid or revoked key" } });
     });
-    await page.goto("/playground");
+    await visitProtected(page, "/dashboard/playground");
     await page.locator('input[type="password"]').fill("sec_bad_key");
     await page.getByPlaceholder("Message the metering assistant...").fill("Hello");
     await page.getByRole("button", { name: "Send prompt" }).click();
 
     await expect(page.getByText("Invalid or revoked key")).toBeVisible();
+});
+
+test("sidebar Playground navigation keeps the app shell visible", async ({ page }) => {
+    await mockAuthenticatedApp(page);
+    await visitProtected(page, "/dashboard");
+    await page.getByRole("link", { name: "AI Playground" }).click();
+
+    await expect(page).toHaveURL(/\/dashboard\/playground$/);
+    await expect(page.getByRole("navigation", { name: "Workspace" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI Playground" })).toBeVisible();
 });
 
 test("public landing navigation remains available on mobile", async ({ page }) => {

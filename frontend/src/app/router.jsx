@@ -83,6 +83,7 @@ export const router = createBrowserRouter([
         children: [
             { index: true, element: <Navigate to="/dashboard" replace /> },
             { path: "dashboard", element: <TenantPage component={Dashboard} /> },
+            { path: "dashboard/playground", element: <TenantPage component={AiPlayground} /> },
             { path: "dashboard/realtime", element: <TenantPage component={Realtime} /> },
             { path: "dashboard/quotas", element: <TenantPage component={Quotas} /> },
             { path: "dashboard/billing", element: <TenantPage component={Billing} /> },
@@ -103,6 +104,7 @@ export const router = createBrowserRouter([
         ),
         children: [
             { index: true, element: <DashboardHome /> },
+            { path: "playground", element: <TenantPage component={AiPlayground} /> },
             { path: "realtime", element: <TenantPage component={Realtime} /> },
             { path: "quotas", element: <TenantPage component={Quotas} /> },
             { path: "billing", element: <TenantPage component={Billing} /> },

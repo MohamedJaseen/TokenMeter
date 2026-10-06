@@ -11,6 +11,7 @@ const pageTitles = [
     ["/dashboard/admin/usage", "Usage explorer"],
     ["/dashboard/admin", "Platform overview"],
     ["/dashboard/quotas", "Usage & quotas"],
+    ["/dashboard/playground", "AI Playground"],
     ["/dashboard/realtime", "Telemetry"],
     ["/dashboard/billing", "Invoices"],
     ["/dashboard/api-keys", "API keys"],
