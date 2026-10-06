@@ -1,0 +1,9 @@
+package dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public record AdminTenantStatusRequest(
+        @NotBlank @Pattern(regexp = "ACTIVE|SUSPENDED") String status
+) {
+}

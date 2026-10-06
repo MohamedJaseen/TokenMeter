@@ -100,6 +100,15 @@ public class ApiTokenFilter extends OncePerRequestFilter {
         boolean isSuperAdmin =
                 claims.roles().contains("SUPER_ADMIN");
 
+        if (path.matches("/api/v1/tenants/[^/]+/quota/reset")
+                && !isSuperAdmin) {
+            sendError(
+                    response,
+                    HttpStatus.FORBIDDEN.value(),
+                    "SUPER_ADMIN role required");
+            return;
+        }
+
         if (scopedTenant != null
                 && claims.tenantId() != null
                 && !isSuperAdmin

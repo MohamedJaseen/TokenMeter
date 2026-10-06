@@ -47,3 +47,5 @@ Notes to self for future SDK/API work — record correct tenant→key seeding an
 - AI usage reporting uses `METERING_INGESTION_URL`; its Render fallback is `https://demo1-ry95.onrender.com/metering/usage`.
 - Docker Compose overrides this with `http://demo:8080/metering/usage`.
 - If the ingestion service URL changes, update the AI service environment variable (including `/metering/usage`) and redeploy AI.
+- Admin quota configuration and reset operations call the quota service directly. Configure the same private shared secret as `QUOTA_INTERNAL_TOKEN` on project and `INTERNAL_SERVICE_TOKEN` on quota; do not expose this value to the frontend.
+- Admin usage explorer reads processed events from the project database `usage_event_ledger`, created by Flyway migration V4. Deploy the project service so this migration runs before enabling the explorer.

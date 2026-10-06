@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
-import { LayoutDashboard, Activity, Gauge, Receipt, Key, ShieldAlert, Cloud, SlidersHorizontal, Settings, Sparkles, Code2, Users } from "lucide-react";
+import { LayoutDashboard, Activity, Gauge, Receipt, Key, ShieldAlert, Cloud, SlidersHorizontal, Settings, Sparkles, Code2, Users, Search } from "lucide-react";
 const Item = ({ item }) => { const Icon = item.icon; return <NavLink to={item.to} className={({isActive}) => `group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition ${isActive ? "bg-[#2a2b25] text-[#f0c82d]" : "text-[#aebbd0] hover:bg-[#171f2e] hover:text-white"}`}><Icon className="h-3.5 w-3.5" /><span>{item.label}</span></NavLink>; };
 export function Sidebar() {
     const { user } = useAuth();
@@ -21,6 +21,8 @@ export function Sidebar() {
         { label: "Admin overview", to: "/dashboard/admin", icon: LayoutDashboard },
         { label: "Pricing", to: "/dashboard/admin/pricing", icon: SlidersHorizontal },
         { label: "Tenant management", to: "/dashboard/admin/tenants", icon: Users },
+        { label: "Billing & invoices", to: "/dashboard/admin/invoices", icon: Receipt },
+        { label: "Usage explorer", to: "/dashboard/admin/usage", icon: Search },
     ];
 
     return (

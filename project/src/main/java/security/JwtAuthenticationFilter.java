@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import persistence.repository.TenantRepository;
 import service.JwtService;
 
 import java.io.IOException;
@@ -24,13 +25,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
+    private final TenantRepository tenantRepository;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            TenantRepository tenantRepository) {
 
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
+        this.tenantRepository = tenantRepository;
     }
 
     @Override
@@ -97,6 +101,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     response,
                     HttpStatus.FORBIDDEN.value(),
                     "Access denied for tenant: " + scopedTenant);
+            return;
+        }
+
+        if (scopedTenant != null && !principal.isSuperAdmin()
+                && tenantRepository.findById(scopedTenant)
+                .map(tenant -> !"ACTIVE".equals(tenant.getStatus()))
+                .orElse(true)) {
+            sendError(
+                    response,
+                    HttpStatus.FORBIDDEN.value(),
+                    "Tenant is suspended or unavailable");
             return;
         }
 

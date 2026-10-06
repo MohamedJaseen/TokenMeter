@@ -4,6 +4,7 @@ import dto.QuotaConfigSnapshot;
 import dto.QuotaEvaluationResult;
 import dto.QuotaSummarySnapshot;
 import dto.QuotaUsageRequest;
+import dto.AdminQuotaUpdateRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -63,6 +64,21 @@ public class QuotaClient {
         return config.unitRateDollars();
     }
 
+    public QuotaConfigSnapshot getConfig(String tenantId) {
+        QuotaConfigSnapshot config =
+                restClient.get()
+                        .uri("/api/v1/tenants/{id}/quota/config", tenantId)
+                        .retrieve()
+                        .body(QuotaConfigSnapshot.class);
+
+        if (config == null) {
+            throw new IllegalStateException(
+                    "Quota service returned no configuration for tenant: "
+                            + tenantId);
+        }
+        return config;
+    }
+
     public QuotaSummarySnapshot getUsageSummary(String tenantId) {
 
         QuotaSummarySnapshot snapshot =
@@ -78,5 +94,33 @@ public class QuotaClient {
         }
 
         return snapshot;
+    }
+
+    public QuotaConfigSnapshot updateConfig(
+            String tenantId,
+            AdminQuotaUpdateRequest request) {
+
+        QuotaConfigSnapshot snapshot =
+                restClient.put()
+                        .uri("/api/v1/tenants/{id}/quota/config", tenantId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(request)
+                        .retrieve()
+                        .body(QuotaConfigSnapshot.class);
+
+        if (snapshot == null) {
+            throw new IllegalStateException(
+                    "Quota service returned no configuration for tenant: "
+                            + tenantId);
+        }
+
+        return snapshot;
+    }
+
+    public void resetCurrentMonthUsage(String tenantId) {
+        restClient.post()
+                .uri("/api/v1/tenants/{id}/quota/reset", tenantId)
+                .retrieve()
+                .toBodilessEntity();
     }
 }

@@ -184,6 +184,14 @@ public class QuotaService {
         return loadConfig(tenantId);
     }
 
+    public void resetCurrentMonthUsage(String tenantId) {
+        TenantQuotaConfig config = loadConfig(tenantId);
+        counterRepository.resetCurrentMonth(
+                tenantId,
+                config.getAlertThresholdPercent());
+        log.warn("Current-month quota counter reset by administrator for tenant {}", tenantId);
+    }
+
     @Transactional
     public TenantQuotaConfig updateConfig(
             String tenantId,

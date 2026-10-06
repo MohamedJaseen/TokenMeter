@@ -121,6 +121,13 @@ public class AuthService {
             throw AuthException.unauthorized("Account is disabled");
         }
 
+        if (user.getTenantId() != null
+                && tenantRepository.findById(user.getTenantId())
+                .map(tenant -> !"ACTIVE".equals(tenant.getStatus()))
+                .orElse(true)) {
+            throw AuthException.unauthorized("Tenant is suspended or unavailable");
+        }
+
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw AuthException.unauthorized("Invalid username or password");
         }
@@ -151,6 +158,13 @@ public class AuthService {
         AppUser user = userRepository.findById(stored.getUserId())
                 .orElseThrow(() ->
                         AuthException.unauthorized("User not found"));
+
+        if (user.getTenantId() != null
+                && tenantRepository.findById(user.getTenantId())
+                .map(tenant -> !"ACTIVE".equals(tenant.getStatus()))
+                .orElse(true)) {
+            throw AuthException.unauthorized("Tenant is suspended or unavailable");
+        }
 
         stored.setRevoked(true);
         refreshTokenRepository.save(stored);

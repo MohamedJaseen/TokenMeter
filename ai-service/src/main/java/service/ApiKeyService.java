@@ -26,7 +26,7 @@ public class ApiKeyService {
         }
 
         Optional<TenantApiKey> key =
-                apiKeyRepository.findByKeyHashAndRevokedFalse(hash(apiKey));
+                apiKeyRepository.findActiveTenantKeyByHash(hash(apiKey));
 
         if (key.isEmpty()) {
             throw new InvalidApiKeyException("Invalid API key");

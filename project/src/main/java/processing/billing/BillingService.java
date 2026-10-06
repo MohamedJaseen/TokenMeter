@@ -40,27 +40,20 @@ public class BillingService {
                         );
 
         BigDecimal total = BigDecimal.ZERO;
+        BigDecimal tenantUnitRate =
+                quotaClient.getUnitRateDollars(tenantId);
 
         for (UsageHourlyAggregate aggregate : usage) {
-
-            BigDecimal unitRate =
-                    getUnitRate(tenantId);
-
             BigDecimal cost =
                     pricingService.calculateCost(
                             aggregate.getTotalUnits(),
-                            unitRate
+                            aggregate.getMetricName(),
+                            tenantUnitRate
                     );
 
             total = total.add(cost);
         }
 
         return total;
-    }
-
-    private BigDecimal getUnitRate(
-            String tenantId) {
-
-        return quotaClient.getUnitRateDollars(tenantId);
     }
 }

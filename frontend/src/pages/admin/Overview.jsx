@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAdminPricing, fetchAdminTenants } from "../../api/endpoints/admin";
+import { fetchAdminInvoices, fetchAdminPricing, fetchAdminTenants, searchAdminUsageEvents } from "../../api/endpoints/admin";
 import { Card } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { Skeleton } from "../../components/ui/Skeleton";
@@ -25,14 +25,32 @@ export default function AdminOverview() {
         queryKey: ["adminPricing"],
         queryFn: fetchAdminPricing,
     });
+    const invoicesQuery = useQuery({
+        queryKey: ["adminInvoices", "overview"],
+        queryFn: () => fetchAdminInvoices(),
+    });
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const eventsQuery = useQuery({
+        queryKey: ["adminUsageEvents", "today"],
+        queryFn: () => searchAdminUsageEvents({
+            from: todayStart.toISOString(),
+            limit: 500,
+        }),
+    });
 
     const tenants = tenantsQuery.data;
     const pricing = pricingQuery.data;
     const tenantsInAlert = tenants?.filter((tenant) =>
-        tenant.status === "WARNING" || tenant.status === "EXCEEDED").length;
+        tenant.quotaStatus === "WARNING" || tenant.quotaStatus === "EXCEEDED").length;
+    const activeTenants = tenants?.filter((tenant) => tenant.tenantStatus === "ACTIVE").length;
     const totalUsage = tenants?.reduce(
         (sum, tenant) => sum + Number(tenant.currentUsage || 0),
         0);
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const paidRevenueThisMonth = (invoicesQuery.data || [])
+        .filter((invoice) => invoice.paymentStatus === "PAID" && invoice.billingPeriodStart.startsWith(thisMonth))
+        .reduce((sum, invoice) => sum + Number(invoice.totalAmountBilled || 0), 0);
 
     return (
         <div className="space-y-5">
@@ -42,7 +60,8 @@ export default function AdminOverview() {
             </header>
 
             {tenantsQuery.isLoading ? (
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
@@ -50,9 +69,13 @@ export default function AdminOverview() {
             ) : tenantsQuery.error ? (
                 <ErrorState message={tenantsQuery.error.message || "Failed to load platform tenant data."} onRetry={tenantsQuery.refetch} />
             ) : (
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <Card>
-                        <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Tenants tracked</p>
+                        <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Active tenants</p>
+                        <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{formatNumber(activeTenants)}</p>
+                    </Card>
+                    <Card>
+                        <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Total tenants</p>
                         <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{formatNumber(tenants.length)}</p>
                     </Card>
                     <Card>
@@ -62,6 +85,10 @@ export default function AdminOverview() {
                     <Card>
                         <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Reported quota usage</p>
                         <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{formatNumber(totalUsage)} units</p>
+                    </Card>
+                    <Card>
+                        <p className="text-[10px] font-semibold uppercase text-[#8795ad]">Paid revenue this month</p>
+                        <p className="mt-2 font-mono text-xl font-bold text-[#f5f7fb]">{invoicesQuery.isLoading ? "…" : `$${paidRevenueThisMonth.toFixed(2)}`}</p>
                     </Card>
                 </div>
             )}
@@ -105,15 +132,25 @@ export default function AdminOverview() {
                         title="Global pricing"
                         description="Configure the platform-wide token and API-call rates."
                     />
+                    <ControlLink
+                        to="/dashboard/admin/invoices"
+                        title="Billing & invoices"
+                        description="Search the invoice ledger, update payment status, generate invoices, and export CSV."
+                    />
+                    <ControlLink
+                        to="/dashboard/admin/usage"
+                        title="Usage explorer"
+                        description={`${eventsQuery.isLoading ? "Loading today's processed events…" : `${formatNumber(eventsQuery.data?.length)} processed events recorded today.`} Filter the metering ledger by tenant and metric.`}
+                    />
                 </div>
             </section>
 
             <Card>
-                <h2 className="text-sm font-semibold text-[#e5ebf5]">Not yet available in this deployment</h2>
+                <h2 className="text-sm font-semibold text-[#e5ebf5]">Operational visibility limitations</h2>
                 <p className="mt-1 text-xs leading-5 text-[#8290a8]">
-                    Platform-wide invoices and revenue, failed/duplicate ingestion inspection, plan catalog management,
-                    and Redis/worker health do not currently have admin APIs in this application. They are not shown as
-                    live metrics until those backend capabilities are implemented.
+                    Processed usage events and the invoice ledger are available above. Duplicate requests rejected before
+                    processing, pending/failed Redis stream entries, a plan catalog, payment-provider reconciliation,
+                    and Redis/PostgreSQL/worker health do not yet have platform admin APIs.
                 </p>
             </Card>
         </div>

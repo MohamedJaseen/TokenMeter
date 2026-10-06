@@ -18,6 +18,8 @@ import DeveloperSdkPage from "../pages/DeveloperSdkPage";
 import Pricing from "../pages/admin/Pricing";
 import Tenants from "../pages/admin/Tenants";
 import AdminOverview from "../pages/admin/Overview";
+import AdminInvoices from "../pages/admin/Invoices";
+import AdminUsageExplorer from "../pages/admin/UsageExplorer";
 import Forbidden from "../pages/Forbidden";
 import NotFound from "../pages/NotFound";
 
@@ -113,6 +115,8 @@ export const router = createBrowserRouter([
                     </RoleRoute>
                 ),
             },
+            { path: "admin/invoices", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminInvoices /></RoleRoute> },
+            { path: "admin/usage", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminUsageExplorer /></RoleRoute> },
         ],
     },
     {
@@ -131,6 +135,8 @@ export const router = createBrowserRouter([
             { path: "admin", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminOverview /></RoleRoute> },
             { path: "admin/pricing", element: <RoleRoute requiredRole="SUPER_ADMIN"><Pricing /></RoleRoute> },
             { path: "admin/tenants", element: <RoleRoute requiredRole="SUPER_ADMIN"><Tenants /></RoleRoute> },
+            { path: "admin/invoices", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminInvoices /></RoleRoute> },
+            { path: "admin/usage", element: <RoleRoute requiredRole="SUPER_ADMIN"><AdminUsageExplorer /></RoleRoute> },
         ],
     },
     {

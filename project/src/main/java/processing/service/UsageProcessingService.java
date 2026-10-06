@@ -85,7 +85,7 @@ public class UsageProcessingService {
          * If this throws, processBatch does not return and the
          * worker will NOT acknowledge the messages.
          */
-        persistenceService.persist(rollups);
+        persistenceService.persist(rollups, events);
 
         /*
          * Only now that the data is committed do we broadcast to any

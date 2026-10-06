@@ -29,7 +29,7 @@ class ApiKeyServiceTest {
         key.setKeyHash(ApiKeyService.hash("key_123"));
         key.setTenantId("tenantA");
 
-        when(repository.findByKeyHashAndRevokedFalse(anyString()))
+        when(repository.findActiveTenantKeyByHash(anyString()))
                 .thenReturn(Optional.of(key));
 
         assertEquals("tenantA", apiKeyService.resolveTenant("key_123"));
@@ -51,7 +51,7 @@ class ApiKeyServiceTest {
     @Test
     void rejectsUnknownKey() {
 
-        when(repository.findByKeyHashAndRevokedFalse(anyString()))
+        when(repository.findActiveTenantKeyByHash(anyString()))
                 .thenReturn(Optional.empty());
 
         InvalidApiKeyException ex = assertThrows(
@@ -69,7 +69,7 @@ class ApiKeyServiceTest {
         key.setRevoked(true);
         key.setCreatedAt(Instant.now());
 
-        when(repository.findByKeyHashAndRevokedFalse(anyString()))
+        when(repository.findActiveTenantKeyByHash(anyString()))
                 .thenReturn(Optional.empty());
 
         assertThrows(

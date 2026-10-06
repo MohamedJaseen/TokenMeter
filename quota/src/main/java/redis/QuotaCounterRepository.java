@@ -46,6 +46,13 @@ public class QuotaCounterRepository {
         return value == null ? 0L : Long.parseLong(value);
     }
 
+    public void resetCurrentMonth(String tenantId, int alertThresholdPercent) {
+        String month = currentMonth();
+        redisTemplate.delete(counterKey(tenantId, month));
+        redisTemplate.delete(alertKey(tenantId, month, alertThresholdPercent));
+        redisTemplate.delete(alertKey(tenantId, month, 100));
+    }
+
     public boolean tryAcquireAlert(
             String tenantId,
             String month,
