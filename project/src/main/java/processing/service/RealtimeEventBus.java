@@ -11,6 +11,10 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -25,8 +29,11 @@ public class RealtimeEventBus {
             LoggerFactory.getLogger(RealtimeEventBus.class);
 
     private static final long HEARTBEAT_INTERVAL_SECONDS = 15;
+    private static final int RECENT_USAGE_EVENT_LIMIT = 200;
 
     private final ConcurrentHashMap<String, Set<SseEmitter>> registry =
+            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Deque<RealtimeEvent>> recentEvents =
             new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService heartbeatScheduler =
@@ -48,10 +55,23 @@ public class RealtimeEventBus {
     }
 
     public SseEmitter subscribe(String tenantId, SseEmitter emitter) {
-        registry.computeIfAbsent(
+        Set<SseEmitter> subscribers =
+                registry.computeIfAbsent(
                         tenantId,
-                        k -> new CopyOnWriteArraySet<>())
-                .add(emitter);
+                        k -> new CopyOnWriteArraySet<>());
+        Deque<RealtimeEvent> history =
+                recentEvents.computeIfAbsent(
+                        tenantId,
+                        k -> new ArrayDeque<>());
+
+        synchronized (history) {
+            for (RealtimeEvent event : history) {
+                if (!sendToEmitter(tenantId, emitter, event)) {
+                    return emitter;
+                }
+            }
+            subscribers.add(emitter);
+        }
 
         emitter.onCompletion(() -> unsubscribe(tenantId, emitter));
         emitter.onTimeout(() -> unsubscribe(tenantId, emitter));
@@ -61,30 +81,51 @@ public class RealtimeEventBus {
     }
 
     public void publish(RealtimeEvent event) {
-        Set<SseEmitter> subscribers = registry.get(event.tenantId());
-        if (subscribers == null || subscribers.isEmpty()) {
-            return;
-        }
+        Deque<RealtimeEvent> history =
+                recentEvents.computeIfAbsent(
+                        event.tenantId(),
+                        k -> new ArrayDeque<>());
 
-        String json;
-        try {
-            json = objectMapper.writeValueAsString(event);
-        } catch (JacksonException e) {
-            log.warn("Could not serialize realtime event", e);
-            return;
+        List<SseEmitter> subscribers;
+        synchronized (history) {
+            if (RealtimeEvent.TYPE_USAGE.equals(event.type())) {
+                history.addLast(event);
+                while (history.size() > RECENT_USAGE_EVENT_LIMIT) {
+                    history.removeFirst();
+                }
+            }
+
+            Set<SseEmitter> registered = registry.get(event.tenantId());
+            subscribers = registered == null
+                    ? List.of()
+                    : new ArrayList<>(registered);
         }
 
         for (SseEmitter emitter : subscribers) {
-            try {
-                emitter.send(
-                        SseEmitter.event()
-                                .data(json, MediaType.APPLICATION_JSON));
-            } catch (IOException | IllegalStateException e) {
-                unsubscribe(event.tenantId(), emitter);
-                log.debug(
-                        "Dropped dead SSE emitter for tenant {}",
-                        event.tenantId());
-            }
+            sendToEmitter(event.tenantId(), emitter, event);
+        }
+    }
+
+    private boolean sendToEmitter(
+            String tenantId,
+            SseEmitter emitter,
+            RealtimeEvent event) {
+
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            emitter.send(
+                    SseEmitter.event()
+                            .data(json, MediaType.APPLICATION_JSON));
+            return true;
+        } catch (JacksonException e) {
+            log.warn("Could not serialize realtime event", e);
+            return false;
+        } catch (IOException | IllegalStateException e) {
+            unsubscribe(tenantId, emitter);
+            log.debug(
+                    "Dropped dead SSE emitter for tenant {}",
+                    tenantId);
+            return false;
         }
     }
 
