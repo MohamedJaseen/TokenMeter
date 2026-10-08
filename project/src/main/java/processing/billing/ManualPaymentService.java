@@ -36,7 +36,11 @@ public class ManualPaymentService {
 
     @Transactional
     public TenantInvoice submitPayment(String tenantId, UUID invoiceId) {
-        TenantInvoice invoice = findInvoice(tenantId, invoiceId);
+        TenantInvoice invoice = invoiceRepository
+                .findForUpdateByInvoiceIdAndTenantId(invoiceId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Invoice not found"));
         if ("PAYMENT_SUBMITTED".equals(invoice.getPaymentStatus())) {
             return invoice;
         }

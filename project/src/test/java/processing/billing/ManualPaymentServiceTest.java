@@ -40,6 +40,8 @@ class ManualPaymentServiceTest {
         invoice.setPaymentStatus("PENDING");
         when(invoiceRepository.findByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test"))
                 .thenReturn(Optional.of(invoice));
+        when(invoiceRepository.findForUpdateByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test"))
+                .thenReturn(Optional.of(invoice));
         when(invoiceRepository.save(invoice)).thenReturn(invoice);
     }
 
@@ -52,6 +54,7 @@ class ManualPaymentServiceTest {
         assertThat(details.qrImageUrl())
                 .isEqualTo("https://payments.example.test/merchant-qr.png");
         assertThat(details.paymentStatus()).isEqualTo("PENDING");
+        verify(invoiceRepository).findByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test");
     }
 
     @Test
@@ -61,6 +64,8 @@ class ManualPaymentServiceTest {
         assertThat(saved.getPaymentStatus()).isEqualTo("PAYMENT_SUBMITTED");
         assertThat(saved.getPaymentSubmittedAt()).isNotNull()
                 .isBeforeOrEqualTo(Instant.now());
+        verify(invoiceRepository)
+                .findForUpdateByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test");
         verify(invoiceRepository).save(invoice);
     }
 
