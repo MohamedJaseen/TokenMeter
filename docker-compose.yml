@@ -65,6 +65,12 @@ services:
       QUOTA_INTERNAL_TOKEN: ${INTERNAL_SERVICE_TOKEN:-}
       JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me-in-production-123456}
       MANUAL_PAYMENT_QR_IMAGE_URL: ${MANUAL_PAYMENT_QR_IMAGE_URL:-}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      PAYMENT_ADMIN_EMAIL: ${PAYMENT_ADMIN_EMAIL:-jaseen132219@gmail.com}
     depends_on:
       redis:
         condition: service_healthy

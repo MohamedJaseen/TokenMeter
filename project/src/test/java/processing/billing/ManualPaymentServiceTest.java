@@ -6,8 +6,11 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.server.ResponseStatusException;
+import persistence.entity.Tenant;
 import persistence.entity.TenantInvoice;
+import persistence.repository.TenantRepository;
 import persistence.repository.TenantInvoiceRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,22 +25,33 @@ class ManualPaymentServiceTest {
             UUID.fromString("11111111-1111-4111-8111-111111111111");
 
     private TenantInvoiceRepository invoiceRepository;
+    private TenantRepository tenantRepository;
+    private ApplicationEventPublisher eventPublisher;
     private ManualPaymentService paymentService;
     private TenantInvoice invoice;
 
     @BeforeEach
     void setUp() {
         invoiceRepository = mock(TenantInvoiceRepository.class);
+        tenantRepository = mock(TenantRepository.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
         PaymentProvider paymentProvider = new ManualQrPaymentProvider(
                 "https://payments.example.test/merchant-qr.png");
         paymentService = new ManualPaymentService(
                 invoiceRepository,
-                paymentProvider);
+                tenantRepository,
+                paymentProvider,
+                eventPublisher);
         invoice = new TenantInvoice();
         invoice.setInvoiceId(INVOICE_ID);
         invoice.setTenantId("tenant_test");
         invoice.setTotalAmountBilled(new BigDecimal("12.50"));
         invoice.setPaymentStatus("PENDING");
+        Tenant tenant = new Tenant();
+        tenant.setTenantId("tenant_test");
+        tenant.setTenantName("Test tenant");
+        tenant.setContactEmail("tenant@example.test");
+        when(tenantRepository.findById("tenant_test")).thenReturn(Optional.of(tenant));
         when(invoiceRepository.findByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test"))
                 .thenReturn(Optional.of(invoice));
         when(invoiceRepository.findForUpdateByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test"))
@@ -67,6 +81,7 @@ class ManualPaymentServiceTest {
         verify(invoiceRepository)
                 .findForUpdateByInvoiceIdAndTenantId(INVOICE_ID, "tenant_test");
         verify(invoiceRepository).save(invoice);
+        verify(eventPublisher).publishEvent(org.mockito.ArgumentMatchers.any(PaymentSubmittedEvent.class));
     }
 
     @Test
@@ -74,7 +89,9 @@ class ManualPaymentServiceTest {
         ManualPaymentService serviceWithoutQr =
                 new ManualPaymentService(
                         invoiceRepository,
-                        new ManualQrPaymentProvider(""));
+                        tenantRepository,
+                        new ManualQrPaymentProvider(""),
+                        eventPublisher);
 
         assertThatThrownBy(() ->
                 serviceWithoutQr.getPaymentDetails("tenant_test", INVOICE_ID))

@@ -16,6 +16,7 @@ import dto.PricingUpdateRequest;
 import dto.QuotaSummarySnapshot;
 import dto.UsageReportResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,6 +32,7 @@ import persistence.repository.PlatformPricingRepository;
 import persistence.repository.TenantRepository;
 import processing.service.QuotaClient;
 import processing.billing.InvoiceService;
+import processing.billing.InvoiceVerificationEvent;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -52,6 +54,7 @@ public class AdminService {
     private final TenantInvoiceRepository invoiceRepository;
     private final InvoiceService invoiceService;
     private final AdminUsageEventRepository usageEventRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AdminService(
             PlatformPricingRepository pricingRepository,
@@ -63,7 +66,8 @@ public class AdminService {
             TenantReportingService reportingService,
             TenantInvoiceRepository invoiceRepository,
             InvoiceService invoiceService,
-            AdminUsageEventRepository usageEventRepository) {
+            AdminUsageEventRepository usageEventRepository,
+            ApplicationEventPublisher eventPublisher) {
 
         this.pricingRepository = pricingRepository;
         this.tenantRepository = tenantRepository;
@@ -75,6 +79,7 @@ public class AdminService {
         this.invoiceRepository = invoiceRepository;
         this.invoiceService = invoiceService;
         this.usageEventRepository = usageEventRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public PlatformPricingResponse getPricing() {
@@ -279,8 +284,20 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Invoice not found"));
+        String previousStatus = invoice.getPaymentStatus();
         invoice.setPaymentStatus(normalizedStatus);
         TenantInvoice saved = invoiceRepository.save(invoice);
+        if (!normalizedStatus.equals(previousStatus)
+                && List.of("PAID", "FAILED").contains(normalizedStatus)) {
+            tenantRepository.findById(saved.getTenantId()).ifPresent(tenant ->
+                    eventPublisher.publishEvent(new InvoiceVerificationEvent(
+                            saved.getInvoiceId(),
+                            tenant.getTenantId(),
+                            tenant.getTenantName(),
+                            tenant.getContactEmail(),
+                            saved.getTotalAmountBilled(),
+                            normalizedStatus)));
+        }
         return new AdminInvoiceResponse(
                 saved.getInvoiceId(),
                 saved.getTenantId(),
